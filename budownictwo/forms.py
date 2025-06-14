@@ -1,56 +1,42 @@
+# gmina/budownictwo/forms.py
+
 from django import forms
-from .models import WniosekBudowlany
+from .models import WniosekBudowlany, Adres
+
+class AdresForm(forms.ModelForm):
+    class Meta:
+        model = Adres
+        fields = '__all__'
 
 class WniosekBudowlanyForm(forms.ModelForm):
-    ulica = forms.CharField(label="Ulica", max_length=100)
-    numer_domu = forms.CharField(label="Numer domu", max_length=10)
-    kod_pocztowy = forms.CharField(label="Kod pocztowy", max_length=10)
-    miejscowosc = forms.CharField(label="Miejscowość", max_length=100)
-
+    """Formularz do składania wniosku o pozwolenie na budowę."""
     class Meta:
         model = WniosekBudowlany
-        fields = ['tytul', 'opis_budowy', 'ulica', 'numer_domu', 'kod_pocztowy', 'miejscowosc']
-        widgets = {
-            'tytul': forms.TextInput(attrs={'class': 'form-control'}),
-            'opis_budowy': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name in ['ulica', 'numer_domu', 'kod_pocztowy', 'miejscowosc']:
-            self.fields[field_name].widget.attrs['class'] = 'form-control'
-
-from django import forms
-from .models import WniosekBudowlany
+        # Użytkownik podaje tylko te dane. Reszta jest dziedziczona lub ustawiana automatycznie.
+        fields = ['rodzaj_inwestycji']
 
 class WeryfikujWniosekBudowlanyForm(forms.ModelForm):
-    powod_odrzucenia = forms.CharField(
-        label="Powód odrzucenia",
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
-    )
-
+    """Formularz dla urzędnika budowlanego."""
     class Meta:
         model = WniosekBudowlany
-        fields = ['opis_budowy', 'powod_odrzucenia']
+        fields = ['status', 'powod_odrzucenia']
         widgets = {
-            'opis_budowy': forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            'status': forms.Select(choices=[
+                ('Zweryfikowany', 'Zweryfikuj i przekaż do inspektora'),
+                ('Odrzucony', 'Odrzuć wniosek')
+            ]),
+            'powod_odrzucenia': forms.Textarea(attrs={'rows': 3}),
         }
-
 
 class DecyzjaInspektoraForm(forms.ModelForm):
-    powod_odrzucenia = forms.CharField(
-        label="Powód odrzucenia",
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
-    )
-
+    """Formularz dla inspektora nadzoru budowlanego."""
     class Meta:
         model = WniosekBudowlany
-        fields = ['opis_budowy', 'powod_odrzucenia']
+        fields = ['status', 'powod_odrzucenia']
         widgets = {
-            'opis_budowy': forms.Textarea(attrs={"rows": 4, "class": "form-control"}),
+            'status': forms.Select(choices=[
+                ('Zatwierdzony', 'Zatwierdź wniosek (wydaj pozwolenie)'),
+                ('Odrzucony', 'Odrzuć wniosek')
+            ]),
+            'powod_odrzucenia': forms.Textarea(attrs={'rows': 3}),
         }
-
-
-

@@ -1,12 +1,12 @@
-# lukaszwasiluk01/gmina/gmina-master/dotacje/models.py
+# gmina/dotacje/models.py
 
 from django.db import models
 from django.urls import reverse
-from ogolne.models import Wniosek  # Import bazowego modelu Wniosek
+from ogolne.models import Wniosek  # WAŻNE: Importujemy bazowy model Wniosek
 
-# Model WniosekDotacja dziedziczy teraz po Wniosek
+# WAŻNE: Zmieniamy dziedziczenie z models.Model na Wniosek
 class WniosekDotacja(Wniosek):
-    # Lista statusów specyficzna dla tego typu wniosku
+    # Definiujemy statusy specyficzne dla tego wniosku.
     STATUS_CHOICES = [
         ('Złożony', 'Złożony'),
         ('W weryfikacji komisji', 'W weryfikacji komisji'),
@@ -16,12 +16,12 @@ class WniosekDotacja(Wniosek):
         ('Zrealizowany', 'Zrealizowany')
     ]
 
-    # Pola specyficzne dla wniosku o dotację
+    # Pola specyficzne tylko dla wniosku o dotację
     tytul_projektu = models.CharField(max_length=255)
     opis_projektu = models.TextField()
     wnioskowana_kwota = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # Pole 'status', 'wnioskodawca' i 'data_zlozenia' są dziedziczone z Wniosek
+    # Pola 'wnioskodawca' i 'status' są teraz dziedziczone, więc ich tu nie powtarzamy.
 
     class Meta:
         verbose_name = "Wniosek o dotację"
@@ -31,5 +31,4 @@ class WniosekDotacja(Wniosek):
         return self.tytul_projektu
 
     def get_absolute_url(self):
-        # Ta metoda jest kluczowa dla działania linków w panelu "Moje Wnioski"
         return reverse('ogolne:wniosek_detail', kwargs={'pk': self.pk})

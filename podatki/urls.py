@@ -1,11 +1,14 @@
+# gmina/podatki/urls.py
+
 from django.urls import path
+# Poprawiono import: 'GenerujDecyzjeView' zamiast 'NowaDecyzjaView'
+from .views import ListaDecyzjiView, GenerujDecyzjeView, RejestrujWplateView
 
-from .views import ListaDecyzjiView, NowaDecyzjaView, RejestrujWplateView
-
-app_name = "podatki"
+app_name = 'podatki'
 
 urlpatterns = [
-    path("nowa/", NowaDecyzjaView.as_view(), name="nowa_decyzja"),
-    path("lista/", ListaDecyzjiView.as_view(), name="lista_decyzji"),
-    path("wplata/", RejestrujWplateView.as_view(), name="rejestruj_wplate"),
+    path('lista/', ListaDecyzjiView.as_view(), name='lista_decyzji'),
+    # Poprawiono użycie widoku na zgodne z importem
+    path('nowa/', GenerujDecyzjeView.as_view(), name='nowa_decyzja'),
+    path('rejestruj-wplate/<int:decyzja_id>/', RejestrujWplateView.as_view(), name='rejestruj_wplate'),
 ]

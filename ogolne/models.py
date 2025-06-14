@@ -1,18 +1,31 @@
-from django.contrib.auth.models import User
+# gmina/ogolne/models.py
+
 from django.db import models
-
-# Create your models here.
-
+from django.conf import settings # Lepsza praktyka niż importowanie User bezpośrednio
 
 class Wniosek(models.Model):
-    wnioskodawca = models.ForeignKey(User, on_delete=models.CASCADE)
-    tytul = models.CharField(max_length=200)
-    data_zlozenia = models.DateTimeField(auto_now_add=True)
-    powod_odrzucenia = models.TextField(blank=True)
+    """
+    Abstrakcyjny model bazowy dla wszystkich wniosków i deklaracji w systemie.
+    """
+    # Domyślne statusy, mogą być nadpisane w modelach dziedziczących
+    STATUS_CHOICES = [
+        ('Złożony', 'Złożony'),
+        ('Zaakceptowany', 'Zaakceptowany'),
+        ('Odrzucony', 'Odrzucony'),
+    ]
 
+    # Wspólne pola dla wszystkich wniosków
+    wnioskodawca = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Złożony')
+    data_zlozenia = models.DateTimeField(auto_now_add=True)
+    powod_odrzucenia = models.TextField(blank=True, null=True, verbose_name="Powód odrzucenia (opcjonalnie)")
 
     class Meta:
         abstract = True
+        ordering = ['-data_zlozenia'] # Sortowanie od najnowszych
+
+    def __str__(self):
+        return f"Wniosek nr {self.pk} od {self.wnioskodawca.username}"
 
 
 class Adres(models.Model):
@@ -23,7 +36,7 @@ class Adres(models.Model):
 
 
 class Mieszkaniec(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     imie = models.CharField(max_length=100)
     nazwisko = models.CharField(max_length=100)
     pesel = models.CharField(max_length=11, unique=True)

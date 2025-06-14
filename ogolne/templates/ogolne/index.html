@@ -1,40 +1,99 @@
 {% extends "ogolne/base.html" %}
 
+{% block title %}Strona główna{% endblock %}
+
 {% block content %}
-<h2>Witaj, {{ user.get_full_name|default:user.username }}</h2>
+<div class="container mt-4">
 
-{% if user.is_authenticated %}
+    {% if not user.is_authenticated %}
+        <div class="p-5 mb-4 bg-light rounded-3 text-center">
+            <div class="container-fluid py-5">
+                <h1 class="display-5 fw-bold">Witaj w Elektronicznym Urzędzie Gminy</h1>
+                <p class="col-lg-8 mx-auto fs-4">Platforma do obsługi spraw urzędowych bez wychodzenia z domu.</p>
+                <a href="{% url 'rejestracja' %}" class="btn btn-primary btn-lg mt-3">Załóż konto</a>
+                <a href="{% url 'login' %}" class="btn btn-secondary btn-lg mt-3">Zaloguj się</a>
+            </div>
+        </div>
+    {% else %}
+        <h2 class="pb-2 border-bottom mb-4">Dostępne e-Usługi</h2>
+        <p>Wybierz sprawę, którą chcesz załatwić online.</p>
 
-  <p>Jesteś zalogowany jako <strong>{{ user.username }}</strong>.</p>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
-  <h3>Twoje akcje:</h3>
-  <ul>
-    {% if is_wnioskodawca %}
-      <li><a href="{% url 'ogolne:moje_wnioski' %}">Moje wnioski</a></li>
-      <li><a href="{% url 'akt_urodzenia:zglos_urodzenie'%}">Zgłoś urodzenie</a></li>
-      <li><a href="{% url 'dowody_osobiste:zloz' %}">Złóż wniosek o dowód osobisty</a></li>
-      <li><a href="{% url 'rejestracja_samochodu:zloz_wniosek' %}">Zarejestruj samochód</a></li>
-      <li><a href="{% url 'dotacje:zloz' %}">Złóż wniosek o dotację</a></li>
-      <li><a href="{% url 'budownictwo:zloz_wniosek_budowlany' %}">Złóż wniosek o pozwolenie na budowę</a></li>
-      <li><a href="{% url 'odpady:zloz' %}">Złóż deklarację śmieciową</a></li>
-      <li><a href="{% url 'ewidencja_zbiornikow:zadeklaruj_zbiornik' %}">Zadeklaruj zbiornik</a></li>
-      <li><a href="{% url 'ewidencja_zbiornikow:zadeklaruj_oproznienie' %}">Zadeklaruj opróżnienie zbiornika</a></li>
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Akty Stanu Cywilnego</h5>
+                        <p class="card-text flex-grow-1">Zgłoś urodzenie dziecka, aby uzyskać akt urodzenia.</p>
+                        <a href="{% url 'akt_urodzenia:zglos_urodzenie' %}" class="btn btn-primary mt-auto">Zgłoś urodzenie</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Dowód Osobisty</h5>
+                        <p class="card-text flex-grow-1">Złóż wniosek o wydanie nowego dowodu osobistego.</p>
+                        <a href="{% url 'dowody_osobiste:zloz_wniosek_dowod' %}" class="btn btn-primary mt-auto">Złóż wniosek</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Pojazdy</h5>
+                        <p class="card-text flex-grow-1">Zarejestruj nowy lub używany pojazd.</p>
+                        <a href="{% url 'rejestracja_samochodu:zloz_wniosek_rejestracja' %}" class="btn btn-primary mt-auto">Zarejestruj pojazd</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Budownictwo</h5>
+                        <p class="card-text flex-grow-1">Złóż wniosek o pozwolenie na budowę.</p>
+                        <a href="{% url 'budownictwo:zloz_wniosek_budowlany' %}" class="btn btn-primary mt-auto">Złóż wniosek</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Dotacje i Dofinansowania</h5>
+                        <p class="card-text flex-grow-1">Ubiegaj się o dostępne dotacje gminne.</p>
+                        <a href="{% url 'dotacje:zloz_wniosek_dotacja' %}" class="btn btn-primary mt-auto">Złóż wniosek o dotację</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Gospodarka Odpadami</h5>
+                        <p class="card-text flex-grow-1">Złóż nową deklarację śmieciową lub zaktualizuj istniejącą.</p>
+                        <a href="{% url 'odpady:zloz_deklaracje' %}" class="btn btn-primary mt-auto">Złóż deklarację</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">Ewidencja Zbiorników Bezodpływowych</h5>
+                        <p class="card-text flex-grow-1">Zarządzaj swoimi zbiornikami i zgłaszaj ich opróżnienia.</p>
+                        <div class="mt-auto">
+                            <a href="{% url 'ewidencja_zbiornikow:zadeklaruj_zbiornik' %}" class="btn btn-primary mb-2 d-block">Zadeklaruj nowy zbiornik</a>
+                            <a href="{% url 'ewidencja_zbiornikow:zadeklaruj_oproznienie' %}" class="btn btn-secondary d-block">Zgłoś opróżnienie</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     {% endif %}
-
-    {% if is_urzednik %}
-      <li><a href="{% url 'ogolne:panel_urzednika' %}">Panel urzędnika</a></li>
-    {% endif %}
-
-    {% if user.is_superuser %}
-      <li><a href="/admin/">Panel administracyjny</a></li>
-    {% endif %}
-  </ul>
-
-  <p><a href="{% url 'logout' %}">Wyloguj się</a></p>
-
-{% else %}
-  <p>Nie jesteś zalogowany.</p>
-  <p><a href="{% url 'login' %}">Zaloguj się</a> lub <a href="{% url 'register' %}">zarejestruj</a>.</p>
-{% endif %}
-
+</div>
 {% endblock %}

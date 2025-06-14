@@ -1,10 +1,30 @@
-{% extends 'ogolne/base.html' %}
+{% extends "ogolne/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Rejestracja{% endblock %}
+
 {% block content %}
-<h2>Rejestracja</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Zarejestruj się</button>
-</form>
-<p>Masz już konto? <a href="{% url 'login' %}">Zaloguj się</a></p>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title text-center">Zarejestruj się</h2>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary mt-3">Zarejestruj</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">
+                    Masz już konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
