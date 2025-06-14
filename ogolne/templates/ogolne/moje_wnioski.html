@@ -1,21 +1,39 @@
-{% extends 'ogolne/base.html' %}
+{% extends "ogolne/base.html" %}
+
+{% block title %}Moje Złożone Wnioski{% endblock %}
 
 {% block content %}
-<h2>Moje wnioski</h2>
-{% if wszystkie_wnioski %}
-    {% for nazwa_modelu, lista in wszystkie_wnioski %}
-        <h3>{{ nazwa_modelu }}</h3>
-        <ul>
-            {% for wniosek in lista %}
-                <li>
-                    {{ wniosek.instance.tytul }} – {{ wniosek.instance.data_zlozenia|date:"Y-m-d" }}
-                    – {% if wniosek.instance.status == "zaakceptowane" %}zatwierdzony{% elif wniosek.instance.status == "oczekuje" %}oczekuje{% else %}odrzucony{% endif %}
-                    – <a href="{% url 'ogolne:wniosek_detail' wniosek.app_label wniosek.model_name wniosek.instance.pk %}">Szczegóły</a>
-                </li>
-            {% endfor %}
-        </ul>
-    {% endfor %}
-{% else %}
-    <p>Nie masz jeszcze złożonych wniosków.</p>
-{% endif %}
+<div class="container mt-4">
+    <h2>Moje Złożone Wnioski</h2>
+    <hr>
+    {% if wnioski_pogrupowane %}
+        {% for grupa, wnioski in wnioski_pogrupowane.items %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>{{ grupa }}</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for wniosek in wnioski %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{{ wniosek.get_absolute_url }}">
+                                        {{ wniosek }}
+                                    </a>
+                                    <br>
+                                    <small class="text-muted">Złożono: {{ wniosek.data_zlozenia|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ wniosek.get_status_display }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Nie złożyłeś jeszcze żadnych wniosków.
+        </div>
+    {% endif %}
+</div>
 {% endblock %}

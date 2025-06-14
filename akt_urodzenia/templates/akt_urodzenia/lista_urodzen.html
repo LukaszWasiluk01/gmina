@@ -7,7 +7,7 @@
   {% for z in zgloszenia %}
     <li>
       {{ z.data_zlozenia }} - {{ z.tytul}}
-      <a href="{% url 'akt_urodzenia:zglos_urodzenie_detail' z.pk %}">Rozpatrz zgloszenie</a>
+      <a href="{% url 'akt_urodzenia:zgloszenie_detail' z.pk %}">Rozpatrz zgloszenie</a>
     </li>
   {% empty %}
     <li>Brak zgłoszeń</li>

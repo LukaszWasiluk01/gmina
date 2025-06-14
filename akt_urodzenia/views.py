@@ -1,192 +1,97 @@
-import random
+# akt_urodzenia/views.py
 
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.core.exceptions import PermissionDenied
-from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect, render
-from django.views import View
+from django.urls import reverse_lazy
+from django.shortcuts import get_object_or_404, redirect
+from django.http import HttpResponseRedirect
+import random
+from datetime import date
 
-from ogolne.models import Mieszkaniec
-
-from .forms import ZgloszenieUrodzeniaForm
 from .models import ZgloszenieUrodzenia
+from .forms import ZgloszenieUrodzeniaForm, RozpatrzZgloszenieForm
 
-# Create your views here.
+def is_urzednik_rejestru_cywilnego(user):
+    return user.groups.filter(name='urzednik_ds_rejestru_stanu_cywilnego').exists()
 
+class ZglosUrodzenieView(LoginRequiredMixin, CreateView):
+    model = ZgloszenieUrodzenia
+    form_class = ZgloszenieUrodzeniaForm
+    template_name = 'akt_urodzenia/zglos_urodzenie.html'
+    success_url = reverse_lazy('ogolne:moje_wnioski')
 
-class ZglosUrodzenieView(LoginRequiredMixin, View):
-    def get(self, request):
-        form = ZgloszenieUrodzeniaForm()
-        return render(request, "akt_urodzenia/zglos_urodzenie.html", {"form": form})
+    def form_valid(self, form):
+        form.instance.wnioskodawca = self.request.user
+        return super().form_valid(form)
 
-    def post(self, request):
-        form = ZgloszenieUrodzeniaForm(request.POST)
+class ListaZgloszenUrodzenView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = ZgloszenieUrodzenia
+    template_name = 'akt_urodzenia/lista_urodzen.html'
+    context_object_name = 'zgloszenia'
 
-        if request.POST.get("zmien"):
-            return render(request, "akt_urodzenia/zglos_urodzenie.html", {"form": form})
+    def test_func(self):
+        return is_urzednik_rejestru_cywilnego(self.request.user)
+
+class ZgloszenieDetailView(LoginRequiredMixin, DetailView):
+    model = ZgloszenieUrodzenia
+    template_name = 'akt_urodzenia/rozpatrz_zgloszenie_detail.html'
+    context_object_name = 'zgloszenie'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Przekazujemy formularz do kontekstu tylko dla urzędnika
+        if is_urzednik_rejestru_cywilnego(self.request.user):
+            context['form'] = RozpatrzZgloszenieForm(instance=self.object)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if not is_urzednik_rejestru_cywilnego(request.user):
+            return redirect('ogolne:index')
+
+        zgloszenie = self.get_object()
+        form = RozpatrzZgloszenieForm(request.POST, instance=zgloszenie)
 
         if form.is_valid():
-            return render(
-                request,
-                "akt_urodzenia/zglos_urodzenie_confirm.html",
-                {"form": form},
-            )
+            action = request.POST.get("action")
+            if action == "accept":
+                zgloszenie.status = 'Zaakceptowany'
+                zgloszenie.pesel_dziecka = self.generuj_pesel(zgloszenie.data_urodzenia_dziecka, zgloszenie.plec_dziecka)
+            elif action == "reject":
+                zgloszenie.status = 'Odrzucony'
 
-        return render(request, "akt_urodzenia/zglos_urodzenie.html", {"form": form})
+            form.save()
 
+        return redirect('akt_urodzenia:lista_zgloszen')
 
-class ZglosUrodzenieConfirmView(LoginRequiredMixin, View):
-    def post(self, request):
-        form = ZgloszenieUrodzeniaForm(request.POST)
-        if not form.is_valid():
-            return render(request, "akt_urodzenia/zglos_urodzenie.html", {"form": form})
-
-        dane = form.cleaned_data
-        pesel = self.generuj_pesel(dane["data_urodzenia"], dane["plec"])
-
-        try:
-            with transaction.atomic():
-                m = Mieszkaniec.objects.create(
-                    imie=dane["imie"],
-                    nazwisko=dane["nazwisko"],
-                    pesel=pesel,
-                    data_urodzenia=dane["data_urodzenia"],
-                    plec=dane["plec"],
-                    adres=request.user.mieszkaniec.adres,
-                    aktywny=False,
-                )
-
-                if request.user.mieszkaniec.plec == "M":
-                    m.ojciec = request.user.mieszkaniec
-                    m.matka = Mieszkaniec.objects.get(pesel=dane["pesel_rodzica"])
-                else:
-                    m.matka = request.user.mieszkaniec
-                    m.ojciec = Mieszkaniec.objects.get(pesel=dane["pesel_rodzica"])
-
-                m.save()
-
-                ZgloszenieUrodzenia.objects.create(
-                    wnioskodawca=request.user,
-                    tytul="Zgłoszenie urodzenia",
-                    mieszkaniec=m,
-                    data_urodzenia=dane["data_urodzenia"],
-                )
-        except Exception as e:
-            return render(
-                request,
-                "akt_urodzenia/zglos_urodzenie.html",
-                {
-                    "form": form,
-                    "blad": "Wystąpił błąd podczas zapisu. Spróbuj ponownie.",
-                },
-            )
-
-        return render(request, "akt_urodzenia/zglos_urodzenie_done.html")
-
-    @staticmethod
-    def generuj_pesel(data_urodzenia, plec):
-        rok = data_urodzenia.year
+    def generuj_pesel(self, data_urodzenia, plec):
+        rok = str(data_urodzenia.year)
         miesiac = data_urodzenia.month
         dzien = data_urodzenia.day
 
-        if 1900 <= rok < 2000:
-            miesiac += 0
-        elif 2000 <= rok < 2100:
+        if data_urodzenia.year >= 2000:
             miesiac += 20
-        elif 2100 <= rok < 2200:
-            miesiac += 40
-        elif 1800 <= rok < 1900:
-            miesiac += 80
-        elif 2200 <= rok < 2300:
-            miesiac += 60
 
-        pesel = f"{rok % 100:02d}{miesiac:02d}{dzien:02d}"
+        pesel = rok[2:]
+        pesel += f"{miesiac:02d}"
+        pesel += f"{dzien:02d}"
 
-        # Losowe cyfry
-        for _ in range(4):
-            pesel += str(random.randint(0, 9))
+        # Prosta seria, w rzeczywistości bardziej skomplikowana
+        seria = f"{random.randint(100, 999):03d}"
+        pesel += seria
 
-        # Płeć – ostatnia cyfra parzysta (K) lub nieparzysta (M)
-        ostatnia = random.randrange(0, 10, 2 if plec == "K" else 1)
-        pesel = pesel[:-1] + str(ostatnia)
+        if plec == 'M':
+            cyfra_plci = random.choice([1, 3, 5, 7, 9])
+        else: # 'K'
+            cyfra_plci = random.choice([0, 2, 4, 6, 8])
+        pesel += str(cyfra_plci)
 
-        # Cyfra kontrolna
+        # Prosta suma kontrolna
         wagi = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3]
-        suma = sum(int(pesel[i]) * wagi[i] for i in range(10))
-        kontrolna = (10 - (suma % 10)) % 10
-        pesel += str(kontrolna)
+        suma = 0
+        for i in range(10):
+            suma += int(pesel[i]) * wagi[i]
+
+        kontrola = (10 - (suma % 10)) % 10
+        pesel += str(kontrola)
 
         return pesel
-
-
-class ListaZgloszenUrodzenView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        return self.request.user.groups.filter(
-            name="Urzędnik ds. rejestru stanu cywilnego"
-        ).exists()
-
-    def handle_no_permission(self):
-        raise PermissionDenied("Nie masz dostępu listy tych wniosków.")
-
-    def get(self, request):
-        zgloszenia = ZgloszenieUrodzenia.objects.filter(status="oczekuje")
-        return render(
-            request, "akt_urodzenia/lista_urodzen.html", {"zgloszenia": zgloszenia}
-        )
-
-
-class ZglosUrodzenieDetailView(LoginRequiredMixin, UserPassesTestMixin, View):
-
-    def test_func(self):
-        return self.request.user.groups.filter(
-            name="Urzędnik ds. rejestru stanu cywilnego"
-        ).exists()
-
-    def handle_no_permission(self):
-        raise PermissionDenied("Nie masz dostępu do tego wniosku.")
-
-    def get(self, request, pk):
-        z = get_object_or_404(ZgloszenieUrodzenia, pk=pk)
-        return render(
-            request, "akt_urodzenia/rozpatrz_zgloszenie_detail.html", {"z": z}
-        )
-
-    def post(self, request, pk):
-        z = get_object_or_404(ZgloszenieUrodzenia, pk=pk)
-
-        if "accept" in request.POST:
-            z.status = "zaakceptowane"
-            z.mieszkaniec.aktywny = True
-            z.mieszkaniec.save()
-            z.save()
-            return render(
-                request,
-                "akt_urodzenia/rozpatrz_zgloszenie_detail_done.html",
-                {"z": z},
-            )
-
-        elif "reject" in request.POST:
-            reason = request.POST.get("reason", "").strip()
-            if not reason:
-                return render(
-                    request,
-                    "akt_urodzenia/rozpatrz_zgloszenie_detail.html",
-                    {
-                        "z": z,
-                        "error": "Podaj powód odrzucenia.",
-                        "show_reason": True,
-                    },
-                )
-
-            z.status = "odrzucone"
-            z.powod_odrzucenia = reason
-            z.mieszkaniec.aktywny = False
-            z.mieszkaniec.save()
-            z.save()
-            return render(
-                request,
-                "akt_urodzenia/rozpatrz_zgloszenie_detail_done.html",
-                {"z": z},
-            )
-
-        return redirect("akt_urodzenia:lista_zgloszen_urodzen")

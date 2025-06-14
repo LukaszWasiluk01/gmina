@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Akty Urodzenia</h5>
                     <p class="card-text">Zarządzaj zgłoszeniami urodzeń.</p>
-                    <a href="{% url 'akt_urodzenia:lista_urodzen' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <a href="{% url 'akt_urodzenia:lista_zgloszen' %}" class="btn btn-primary">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
@@ -27,10 +27,10 @@
                     <h5 class="card-title">Budownictwo</h5>
                     <p class="card-text">Zarządzaj wnioskami o pozwolenie na budowę.</p>
                     {% if 'Urzędnik ds. budownictwa' in user.groups.all|join:", " %}
-                        <a href="{% url 'budownictwo:lista_wnioskow' %}" class="btn btn-primary">Weryfikuj wnioski</a>
+                        <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary">Weryfikuj wnioski</a>
                     {% endif %}
                     {% if 'Inspektor nadzoru budowlanego' in user.groups.all|join:", " %}
-                        <a href="{% url 'budownictwo:lista_wnioskow_inspektor' %}" class="btn btn-primary">Wydaj decyzje</a>
+                        <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary">Wydaj decyzje</a>
                     {% endif %}
                 </div>
             </div>
@@ -44,13 +44,13 @@
                     <h5 class="card-title">Dotacje</h5>
                     <p class="card-text">Zarządzaj procesem przyznawania dotacji.</p>
                     {% if 'Komisja ds. dotacji' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_komisja' %}" class="btn btn-primary">Weryfikacja Komisji</a>
+                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Weryfikacja Komisji</a>
                     {% endif %}
                     {% if 'Wójt' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_wojt' %}" class="btn btn-primary">Rekomendacje dla Wójta</a>
+                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Rekomendacje dla Wójta</a>
                     {% endif %}
                      {% if 'Urzędnik ds. dotacji' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_urzednik' %}" class="btn btn-primary">Realizacja dotacji</a>
+                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Realizacja dotacji</a>
                     {% endif %}
                 </div>
             </div>
@@ -63,7 +63,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Dowody Osobiste</h5>
                     <p class="card-text">Zarządzaj wnioskami o dowód osobisty.</p>
-                    <a href="{% url 'dowody_osobiste:lista_wnioskow' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <a href="{% url 'dowody_osobiste:lista_wnioskow_dowod' %}" class="btn btn-primary">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Rejestracja Samochodów</h5>
                     <p class="card-text">Zarządzaj wnioskami o rejestrację pojazdów.</p>
-                    <a href="{% url 'rejestracja_samochodu:lista_wnioskow' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <a href="{% url 'rejestracja_samochodu:lista_wnioskow_rejestracja' %}" class="btn btn-primary">Przejdź do modułu</a>
                 </div>
             </div>
         </div>

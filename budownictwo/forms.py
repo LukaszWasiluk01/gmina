@@ -1,42 +1,31 @@
-# gmina/budownictwo/forms.py
+# budownictwo/forms.py
 
 from django import forms
-from .models import WniosekBudowlany, Adres
-
-class AdresForm(forms.ModelForm):
-    class Meta:
-        model = Adres
-        fields = '__all__'
+from .models import WniosekBudowlany
+from ogolne.models import Adres
 
 class WniosekBudowlanyForm(forms.ModelForm):
-    """Formularz do składania wniosku o pozwolenie na budowę."""
-    class Meta:
-        model = WniosekBudowlany
-        # Użytkownik podaje tylko te dane. Reszta jest dziedziczona lub ustawiana automatycznie.
-        fields = ['rodzaj_inwestycji']
+    # Dodajemy pola dla modelu Adres, aby móc je zapisać razem
+    ulica = forms.CharField(max_length=100)
+    numer_domu = forms.CharField(max_length=10)
+    numer_mieszkania = forms.CharField(max_length=10, required=False)
+    kod_pocztowy = forms.CharField(max_length=6)
+    miejscowosc = forms.CharField(max_length=100)
 
-class WeryfikujWniosekBudowlanyForm(forms.ModelForm):
-    """Formularz dla urzędnika budowlanego."""
     class Meta:
         model = WniosekBudowlany
-        fields = ['status', 'powod_odrzucenia']
+        # Zaktualizowano pola formularza
+        fields = ['tytul', 'opis_budowy', 'rodzaj_inwestycji', 'numer_dzialki', 'ulica', 'numer_domu', 'numer_mieszkania', 'kod_pocztowy', 'miejscowosc']
+
+class RozpatrzWniosekForm(forms.ModelForm):
+    class Meta:
+        model = WniosekBudowlany
+        fields = ['status', 'uzasadnienie_odrzucenia']
         widgets = {
-            'status': forms.Select(choices=[
-                ('Zweryfikowany', 'Zweryfikuj i przekaż do inspektora'),
-                ('Odrzucony', 'Odrzuć wniosek')
-            ]),
-            'powod_odrzucenia': forms.Textarea(attrs={'rows': 3}),
+            'uzasadnienie_odrzucenia': forms.Textarea(attrs={'rows': 3}),
         }
 
 class DecyzjaInspektoraForm(forms.ModelForm):
-    """Formularz dla inspektora nadzoru budowlanego."""
     class Meta:
         model = WniosekBudowlany
-        fields = ['status', 'powod_odrzucenia']
-        widgets = {
-            'status': forms.Select(choices=[
-                ('Zatwierdzony', 'Zatwierdź wniosek (wydaj pozwolenie)'),
-                ('Odrzucony', 'Odrzuć wniosek')
-            ]),
-            'powod_odrzucenia': forms.Textarea(attrs={'rows': 3}),
-        }
+        fields = ['status', 'uzasadnienie_odrzucenia']

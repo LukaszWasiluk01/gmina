@@ -1,82 +1,111 @@
-# lukaszwasiluk01/gmina/gmina-master/budownictwo/views.py
+# budownictwo/views.py
 
-from django.shortcuts import render, redirect
-from django.views.generic import CreateView, ListView, UpdateView, FormView, TemplateView
-from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import WniosekBudowlany
-from .forms import WniosekBudowlanyForm, WeryfikujWniosekBudowlanyForm, DecyzjaInspektoraForm
+from django.urls import reverse_lazy
+from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
 
+from .models import WniosekBudowlany, Adres
+from .forms import WniosekBudowlanyForm, RozpatrzWniosekForm, DecyzjaInspektoraForm
 
-class WnioskodawcaMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Wnioskodawca').exists()
+def is_urzednik_budownictwa(user):
+    return user.groups.filter(name='urzednik_ds_budownictwa').exists()
 
-class UrzednikBudowlanyMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Urzędnik ds. budownictwa').exists()
+def is_inspektor(user):
+    return user.groups.filter(name='inspektor_nadzoru_budowlanego').exists()
 
-class InspektorNadzoruMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Inspektor nadzoru budowlanego').exists()
-
-class ZlozWniosekBudowlanyView(LoginRequiredMixin, WnioskodawcaMixin, FormView):
-    template_name = 'budownictwo/zloz_wniosek_budowlany.html'
+class ZlozWniosekBudowlanyView(LoginRequiredMixin, CreateView):
+    model = WniosekBudowlany
     form_class = WniosekBudowlanyForm
+    template_name = 'budownictwo/zloz_wniosek_budowlany.html'
 
     def form_valid(self, form):
-        self.request.session['wniosek_budowlany_data'] = form.cleaned_data
-        return redirect('budownictwo:potwierdz_wniosek')
+        # Nie zapisujemy jeszcze, tylko tworzymy obiekty w pamięci
+        adres_data = {
+            'ulica': form.cleaned_data['ulica'],
+            'numer_domu': form.cleaned_data['numer_domu'],
+            'numer_mieszkania': form.cleaned_data['numer_mieszkania'],
+            'kod_pocztowy': form.cleaned_data['kod_pocztowy'],
+            'miejscowosc': form.cleaned_data['miejscowosc'],
+        }
+        wniosek_data = {
+            'tytul': form.cleaned_data['tytul'],
+            'opis_budowy': form.cleaned_data['opis_budowy'],
+            'rodzaj_inwestycji': form.cleaned_data['rodzaj_inwestycji'],
+            'numer_dzialki': form.cleaned_data['numer_dzialki'],
+        }
 
-class PotwierdzWniosekBudowlanyView(LoginRequiredMixin, WnioskodawcaMixin, TemplateView):
+        # Przechowujemy dane w sesji do potwierdzenia
+        self.request.session['wniosek_budowlany_data'] = wniosek_data
+        self.request.session['adres_inwestycji_data'] = adres_data
+
+        # Poprawiono przekierowanie na poprawną nazwę URL
+        return HttpResponseRedirect(reverse_lazy('budownictwo:potwierdz_wniosek_budowlany'))
+
+class PotwierdzWniosekBudowlanyView(LoginRequiredMixin, CreateView):
     template_name = 'budownictwo/potwierdz_wniosek_budowlany.html'
+    model = WniosekBudowlany
+    form_class = WniosekBudowlanyForm # Potrzebne, żeby szablon miał dostęp do pól
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['wniosek_data'] = self.request.session.get('wniosek_budowlany_data')
+        context['adres_data'] = self.request.session.get('adres_inwestycji_data')
         return context
 
     def post(self, request, *args, **kwargs):
         wniosek_data = request.session.get('wniosek_budowlany_data')
-        if wniosek_data:
-            form = WniosekBudowlanyForm(wniosek_data)
-            if form.is_valid():
-                wniosek = form.save(commit=False)
-                wniosek.wnioskodawca = request.user
-                wniosek.save()
-                del request.session['wniosek_budowlany_data']
-                return redirect('budownictwo:wniosek_zlozony')
-        return redirect('budownictwo:zloz_wniosek')
+        adres_data = request.session.get('adres_inwestycji_data')
 
-class WniosekZlozonyView(LoginRequiredMixin, TemplateView):
-    template_name = 'budownictwo/wniosek_zlozony.html'
+        if not wniosek_data or not adres_data:
+            return redirect('budownictwo:zloz_wniosek_budowlany')
 
-class ListaWnioskowBudowlanychView(LoginRequiredMixin, UrzednikBudowlanyMixin, ListView):
+        adres = Adres.objects.create(**adres_data)
+        wniosek = WniosekBudowlany.objects.create(
+            wnioskodawca=request.user,
+            adres_inwestycji=adres,
+            **wniosek_data
+        )
+
+        # Czyszczenie sesji
+        del request.session['wniosek_budowlany_data']
+        del request.session['adres_inwestycji_data']
+
+        return redirect('ogolne:moje_wnioski')
+
+class ListaWnioskowBudowlanychView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = WniosekBudowlany
     template_name = 'budownictwo/lista_wnioskow.html'
     context_object_name = 'wnioski'
 
-    def get_queryset(self):
-        # Urzędnik ds. budownictwa widzi tylko nowe, niezwerfikowane wnioski
-        return WniosekBudowlany.objects.filter(status='Złożony')
+    def test_func(self):
+        return is_urzednik_budownictwa(self.request.user) or is_inspektor(self.request.user)
 
-class RozpatrzWniosekBudowlanyView(LoginRequiredMixin, UrzednikBudowlanyMixin, UpdateView):
+    def get_queryset(self):
+        if is_inspektor(self.request.user):
+            # Inspektor widzi tylko wnioski zaakceptowane przez urzędnika
+            return WniosekBudowlany.objects.filter(status='W weryfikacji')
+        return WniosekBudowlany.objects.all()
+
+class RozpatrzWniosekBudowlanyView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = WniosekBudowlany
-    form_class = WeryfikujWniosekBudowlanyForm
+    form_class = RozpatrzWniosekForm
     template_name = 'budownictwo/rozpatrz_wniosek.html'
-    success_url = reverse_lazy('budownictwo:lista_wnioskow')
+    context_object_name = 'wniosek'
+    # Poprawiono success_url
+    success_url = reverse_lazy('budownictwo:lista_wnioskow_budowlanych')
 
-class ListaWnioskowDlaInspektoraView(LoginRequiredMixin, InspektorNadzoruMixin, ListView):
-    model = WniosekBudowlany
-    template_name = 'budownictwo/lista_wnioskow.html'
-    context_object_name = 'wnioski'
+    def test_func(self):
+        return is_urzednik_budownictwa(self.request.user)
 
-    def get_queryset(self):
-        # Inspektor nadzoru widzi tylko wnioski, które zostały zweryfikowane przez urzędnika
-        return WniosekBudowlany.objects.filter(status='Zweryfikowany')
-
-class DecyzjaInspektoraView(LoginRequiredMixin, InspektorNadzoruMixin, UpdateView):
+class DecyzjaInspektoraView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = WniosekBudowlany
     form_class = DecyzjaInspektoraForm
     template_name = 'budownictwo/decyzja_inspektora.html'
-    success_url = reverse_lazy('budownictwo:lista_wnioskow_inspektor')
+    context_object_name = 'wniosek'
+    # Poprawiono success_url
+    success_url = reverse_lazy('budownictwo:lista_wnioskow_budowlanych')
+
+    def test_func(self):
+        return is_inspektor(self.request.user)

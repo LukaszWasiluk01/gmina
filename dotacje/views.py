@@ -1,32 +1,17 @@
-# lukaszwasiluk01/gmina/gmina-master/dotacje/views.py
+# dotacje/views.py
 
 from django.views.generic import CreateView, ListView, UpdateView
-from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django import forms
+
 from .models import WniosekDotacja
-from .forms import WniosekDotacjaForm, WeryfikacjaKomisjiForm, RekomendacjaWojtaForm, PrzelewDotacjiForm
+from .forms import (
+    WniosekDotacjaForm, WeryfikacjaFormalnaForm, OcenaKomisjiForm,
+    DecyzjaWojtaForm, RealizacjaSkarbnikaForm
+)
 
-# --- Mixins do kontroli dostępu ---
-
-class WnioskodawcaMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Wnioskodawca').exists()
-
-class KomisjaDotacjiMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Komisja ds. dotacji').exists()
-
-class WojtMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Wójt').exists()
-
-class UrzednikDotacjiMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Urzędnik ds. dotacji').exists()
-
-# --- Widoki dla Wnioskodawcy ---
-
-class ZlozWniosekDotacjaView(LoginRequiredMixin, WnioskodawcaMixin, CreateView):
+class ZlozWniosekDotacjaView(LoginRequiredMixin, CreateView):
     model = WniosekDotacja
     form_class = WniosekDotacjaForm
     template_name = 'dotacje/zloz_wniosek.html'
@@ -34,54 +19,66 @@ class ZlozWniosekDotacjaView(LoginRequiredMixin, WnioskodawcaMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.wnioskodawca = self.request.user
-        form.instance.status = 'Złożony'
         return super().form_valid(form)
 
-# --- Widoki dla Komisji ds. dotacji ---
-
-class ListaWnioskowDlaKomisjiView(LoginRequiredMixin, KomisjaDotacjiMixin, ListView):
+class ListaWnioskowDotacjeView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = WniosekDotacja
     template_name = 'dotacje/lista_wnioskow.html'
     context_object_name = 'wnioski'
 
-    def get_queryset(self):
-        return WniosekDotacja.objects.filter(status='Złożony')
-
-class WeryfikujWniosekKomisjaView(LoginRequiredMixin, KomisjaDotacjiMixin, UpdateView):
-    model = WniosekDotacja
-    form_class = WeryfikacjaKomisjiForm
-    template_name = 'dotacje/rozpatrz_wniosek.html'
-    success_url = reverse_lazy('dotacje:lista_komisja')
-
-# --- Widoki dla Wójta ---
-
-class ListaWnioskowDlaWojtaView(LoginRequiredMixin, WojtMixin, ListView):
-    model = WniosekDotacja
-    template_name = 'dotacje/lista_wnioskow.html'
-    context_object_name = 'wnioski'
+    def test_func(self):
+        """Sprawdza, czy użytkownik należy do którejkolwiek z grup uprawnionych do obsługi dotacji."""
+        return self.request.user.groups.filter(name__in=[
+            'urzednik_ds_dotacji', 'komisja_ds_dotacji', 'wojt', 'skarbnik_gminy'
+        ]).exists()
 
     def get_queryset(self):
-        return WniosekDotacja.objects.filter(status='W weryfikacji komisji')
+        """Filtruje wnioski, aby każdy urzędnik widział tylko te na swoim etapie pracy."""
+        user = self.request.user
+        if user.groups.filter(name='urzednik_ds_dotacji').exists():
+            return WniosekDotacja.objects.filter(status__in=['Złożony', 'Braki formalne'])
+        if user.groups.filter(name='komisja_ds_dotacji').exists():
+            return WniosekDotacja.objects.filter(status='Do oceny komisji')
+        if user.groups.filter(name='wojt').exists():
+            return WniosekDotacja.objects.filter(status='Do decyzji wójta')
+        if user.groups.filter(name='skarbnik_gminy').exists():
+            return WniosekDotacja.objects.filter(status='Zatwierdzony')
 
-class RozpatrzRekomendacjeWojtView(LoginRequiredMixin, WojtMixin, UpdateView):
+        # Jeśli użytkownik nie ma przypisanej żadnej z ról, nie widzi żadnych wniosków.
+        return WniosekDotacja.objects.none()
+
+class RozpatrzWniosekDotacjaView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = WniosekDotacja
-    form_class = RekomendacjaWojtaForm
     template_name = 'dotacje/rozpatrz_wniosek.html'
-    success_url = reverse_lazy('dotacje:lista_wojt')
+    context_object_name = 'wniosek'
+    success_url = reverse_lazy('dotacje:lista_wnioskow')
 
-# --- Widoki dla Urzędnika ds. dotacji ---
+    def test_func(self):
+        """Logika dostępu jest taka sama jak w widoku listy."""
+        return self.request.user.groups.filter(name__in=[
+            'urzednik_ds_dotacji', 'komisja_ds_dotacji', 'wojt', 'skarbnik_gminy'
+        ]).exists()
 
-class ListaWnioskowDlaUrzednikaView(LoginRequiredMixin, UrzednikDotacjiMixin, ListView):
-    model = WniosekDotacja
-    template_name = 'dotacje/lista_wnioskow.html'
-    context_object_name = 'wnioski'
+    def get_form_class(self):
+        """
+        Dynamicznie wybiera odpowiedni formularz na podstawie aktualnego statusu wniosku
+        oraz roli zalogowanego użytkownika. To jest serce logiki workflow.
+        """
+        status = self.object.status
+        user = self.request.user
 
-    def get_queryset(self):
-        # Urzędnik widzi wnioski zatwierdzone przez wójta, gotowe do realizacji
-        return WniosekDotacja.objects.filter(status='Zatwierdzony')
+        if status in ['Złożony', 'Braki formalne'] and user.groups.filter(name='urzednik_ds_dotacji').exists():
+            return WeryfikacjaFormalnaForm
 
-class PrzelejDotacjeView(LoginRequiredMixin, UrzednikDotacjiMixin, UpdateView):
-    model = WniosekDotacja
-    form_class = PrzelewDotacjiForm
-    template_name = 'dotacje/rozpatrz_wniosek.html'
-    success_url = reverse_lazy('dotacje:lista_urzednik')
+        if status == 'Do oceny komisji' and user.groups.filter(name='komisja_ds_dotacji').exists():
+            return OcenaKomisjiForm
+
+        if status == 'Do decyzji wójta' and user.groups.filter(name='wojt').exists():
+            return DecyzjaWojtaForm
+
+        if status == 'Zatwierdzony' and user.groups.filter(name='skarbnik_gminy').exists():
+            return RealizacjaSkarbnikaForm
+
+        # Jeśli dla danego statusu i użytkownika nie ma przewidzianej akcji,
+        # zwracamy pusty formularz, który niczego nie wyświetli.
+        return forms.Form

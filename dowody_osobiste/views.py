@@ -1,21 +1,11 @@
-# gmina/dowody_osobiste/views.py
+# dowody_osobiste/views.py
 
 from django.views.generic import CreateView, ListView, UpdateView
-from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
 from .models import WniosekDowod
 
-class WnioskodawcaMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Wnioskodawca').exists()
-
-class UrzednikDowodowMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Urzędnik ds. wydawania dowodów osobistych').exists()
-
-
-# POPRAWIONO NAZWĘ KLASY
-class ZlozWniosekDowodView(LoginRequiredMixin, WnioskodawcaMixin, CreateView):
+class ZlozWniosekDowodView(LoginRequiredMixin, CreateView):
     model = WniosekDowod
     fields = ['powod_wydania']
     template_name = 'dowody_osobiste/zloz_wniosek.html'
@@ -25,18 +15,20 @@ class ZlozWniosekDowodView(LoginRequiredMixin, WnioskodawcaMixin, CreateView):
         form.instance.wnioskodawca = self.request.user
         return super().form_valid(form)
 
-# POPRAWIONO NAZWĘ KLASY
-class ListaWnioskowDowodView(LoginRequiredMixin, UrzednikDowodowMixin, ListView):
+class ListaWnioskowDowodView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = WniosekDowod
     template_name = 'dowody_osobiste/lista_wnioskow.html'
     context_object_name = 'wnioski'
 
-    def get_queryset(self):
-        return WniosekDowod.objects.filter(status='Złożony')
+    def test_func(self):
+        return self.request.user.groups.filter(name='urzednik_ds_wydawania_dowodow_osobistych').exists()
 
-# POPRAWIONO NAZWĘ KLASY
-class RozpatrzWniosekDowodView(LoginRequiredMixin, UrzednikDowodowMixin, UpdateView):
+class RozpatrzWniosekDowodView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = WniosekDowod
-    fields = ['status', 'powod_odrzucenia']
+    fields = ['status', 'uzasadnienie_odrzucenia']
     template_name = 'dowody_osobiste/rozpatrz_wniosek.html'
+    context_object_name = 'wniosek'
     success_url = reverse_lazy('dowody_osobiste:lista_wnioskow_dowod')
+
+    def test_func(self):
+        return self.request.user.groups.filter(name='urzednik_ds_wydawania_dowodow_osobistych').exists()

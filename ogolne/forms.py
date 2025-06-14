@@ -1,77 +1,57 @@
+# ogolne/forms.py
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Mieszkaniec
 
-from .models import Adres, Mieszkaniec
+class RejestracjaForm(forms.Form):
+    # Pola dla modelu User
+    username = forms.CharField(max_length=150, label="Nazwa użytkownika")
+    password = forms.CharField(widget=forms.PasswordInput, label="Hasło")
+    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Potwierdź hasło")
+    first_name = forms.CharField(max_length=30, label="Imię")
+    last_name = forms.CharField(max_length=150, label="Nazwisko")
+    email = forms.EmailField(label="Adres e-mail")
 
+    # Pola dla modelu Mieszkaniec
+    pesel = forms.CharField(max_length=11, label="PESEL")
+    data_urodzenia = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}), label="Data urodzenia")
+    plec = forms.ChoiceField(choices=Mieszkaniec.PLEC_CHOICES, label="Płeć")
 
-class RejestracjaForm(UserCreationForm):
-    first_name = forms.CharField(label="Imię", max_length=30, required=True)
-    last_name = forms.CharField(label="Nazwisko", max_length=30, required=True)
-    email = forms.EmailField(label="Email", required=True)
-    pesel = forms.CharField(label="PESEL", max_length=11, required=True)
+    # Pola dla modelu Adres (zamieszkania)
+    ulica = forms.CharField(max_length=100, label="Ulica")
+    numer_domu = forms.CharField(max_length=10, label="Numer domu")
+    numer_mieszkania = forms.CharField(max_length=10, required=False, label="Numer mieszkania")
+    kod_pocztowy = forms.CharField(max_length=6, label="Kod pocztowy")
+    miejscowosc = forms.CharField(max_length=100, label="Miejscowość")
 
-    PLEC_CHOICES = [
-        ("M", "Mężczyzna"),
-        ("K", "Kobieta"),
-    ]
-    plec = forms.ChoiceField(
-        label="Płeć",
-        choices=PLEC_CHOICES,
-        widget=forms.Select,
-        initial="M",
-        required=True,
-    )
+    def clean_username(self):
+        """Sprawdza, czy nazwa użytkownika jest już zajęta."""
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise forms.ValidationError("Ta nazwa użytkownika jest już zajęta.")
+        return username
 
-    ulica = forms.CharField(label="Ulica", max_length=100)
-    numer_domu = forms.CharField(label="Numer domu", max_length=10)
-    kod_pocztowy = forms.CharField(label="Kod pocztowy", max_length=10)
-    miejscowosc = forms.CharField(label="Miejscowość", max_length=100)
-    data_urodzenia = forms.DateField(
-        label="Data urodzenia", widget=forms.DateInput(attrs={"type": "date"})
-    )
+    def clean_email(self):
+        """Sprawdza, czy email jest już używany."""
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Ten adres e-mail jest już używany.")
+        return email
 
-    class Meta:
-        model = User
-        fields = (
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "pesel",
-            "plec",
-            "ulica",
-            "numer_domu",
-            "kod_pocztowy",
-            "miejscowosc",
-            "data_urodzenia",
-            "password1",
-            "password2",
-        )
+    def clean_pesel(self):
+        """Sprawdza, czy PESEL jest już w bazie."""
+        pesel = self.cleaned_data.get('pesel')
+        if Mieszkaniec.objects.filter(pesel=pesel).exists():
+            raise forms.ValidationError("Ten numer PESEL jest już zarejestrowany.")
+        return pesel
 
-    def save(self, commit=True):
-        user = super().save(commit)
-        user.email = self.cleaned_data["email"]
-        user.first_name = self.cleaned_data["first_name"]
-        user.last_name = self.cleaned_data["last_name"]
-        if commit:
-            user.save()
-            if not Mieszkaniec.objects.filter(user=user).exists():
-                adres, _ = Adres.objects.get_or_create(
-                    ulica=self.cleaned_data["ulica"],
-                    numer_domu=self.cleaned_data["numer_domu"],
-                    kod_pocztowy=self.cleaned_data["kod_pocztowy"],
-                    miejscowosc=self.cleaned_data["miejscowosc"],
-                )
+    def clean(self):
+        """Sprawdza, czy hasła się zgadzają."""
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
 
-                mieszkaniec = Mieszkaniec.objects.create(
-                    user=user,
-                    imie=self.cleaned_data["first_name"],
-                    nazwisko=self.cleaned_data["last_name"],
-                    pesel=self.cleaned_data["pesel"],
-                    plec=self.cleaned_data["plec"],
-                    data_urodzenia=self.cleaned_data["data_urodzenia"],
-                    adres=adres,
-                )
-                mieszkaniec.save()
-        return user
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("Hasła nie są identyczne.")
+        return cleaned_data

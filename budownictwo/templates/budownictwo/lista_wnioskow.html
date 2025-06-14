@@ -10,10 +10,10 @@
       {{ wniosek.data_zlozenia|date:"Y-m-d H:i" }} – {{ wniosek.tytul }} ({{ wniosek.status }})
 
       {% if is_budownictwo %}
-        <a href="{% url 'budownictwo:weryfikuj' wniosek.pk %}">Rozpatrz wniosek</a>
+        <a href="{% url 'budownictwo:rozpatrz_wniosek' wniosek.pk %}">Rozpatrz wniosek</a>
       {% elif is_inspektor %}
         {% if wniosek.status == 'zweryfikowany' %}
-          <a href="{% url 'budownictwo:decyzja' wniosek.pk %}">Wydaj decyzję</a>
+          <a href="{% url 'budownictwo:decyzja_inspektora' wniosek.pk %}">Wydaj decyzję</a>
         {% endif %}
       {% endif %}
     </li>

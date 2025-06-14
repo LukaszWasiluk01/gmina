@@ -1,26 +1,12 @@
+# akt_urodzenia/urls.py
+
 from django.urls import path
+from .views import ZglosUrodzenieView, ListaZgloszenUrodzenView, ZgloszenieDetailView
 
-from . import views
-
-app_name = "akt_urodzenia"
+app_name = 'akt_urodzenia'
 
 urlpatterns = [
-    path(
-        "zglos-urodzenie/", views.ZglosUrodzenieView.as_view(), name="zglos_urodzenie"
-    ),
-    path(
-        "zglos-urodzenie/confirm/",
-        views.ZglosUrodzenieConfirmView.as_view(),
-        name="zglos_urodzenie_confirm",
-    ),
-    path(
-        "lista-zgloszen-urodzen/",
-        views.ListaZgloszenUrodzenView.as_view(),
-        name="lista_zgloszen_urodzen",
-    ),
-    path(
-        "zglos-urodzenie-detail/<int:pk>/",
-        views.ZglosUrodzenieDetailView.as_view(),
-        name="zglos_urodzenie_detail",
-    ),
+    path('zglos/', ZglosUrodzenieView.as_view(), name='zglos_urodzenie'),
+    path('lista/', ListaZgloszenUrodzenView.as_view(), name='lista_zgloszen'),
+    path('zgloszenie/<int:pk>/', ZgloszenieDetailView.as_view(), name='zgloszenie_detail'),
 ]

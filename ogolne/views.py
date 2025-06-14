@@ -1,92 +1,98 @@
-# lukaszwasiluk01/gmina/gmina-master/ogolne/views.py
+# ogolne/views.py
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import TemplateView, CreateView, ListView, DetailView
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, ListView
+# Zmieniono import: usunięto CreateView, dodano FormView
+from django.views.generic.edit import FormView
+from django.contrib.auth.views import LoginView as AuthLoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from itertools import chain
-from django.contrib.auth.models import Group
-from django.contrib.auth.views import LoginView
-from .forms import RejestracjaForm
+from django.contrib.auth.models import User
+from django.urls import reverse_lazy
+from django.db import transaction
+from django.apps import apps
+from collections import defaultdict
 
-# Importowanie wszystkich modeli wniosków z całego projektu
-from akt_urodzenia.models import ZgloszenieUrodzenia
-from budownictwo.models import WniosekBudowlany
-from dotacje.models import WniosekDotacja
-from dowody_osobiste.models import WniosekDowod
-from ewidencja_zbiornikow.models import DeklaracjaOproznienia, DeklaracjaZbiornika
-from odpady.models import DeklaracjaSmieciowa
-from rejestracja_samochodu.models import WniosekRejestracja
+from .forms import RejestracjaForm
+from .models import Mieszkaniec, Adres
 
 class IndexView(TemplateView):
     template_name = 'ogolne/index.html'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            # Sprawdzenie czy użytkownik jest w jakiejkolwiek grupie oprócz "Wnioskodawca"
-            is_urzednik = self.request.user.groups.exclude(name='Wnioskodawca').exists()
-            context['is_urzednik'] = is_urzednik
-        return context
-
-class RejestracjaView(CreateView):
-    form_class = RejestracjaForm
-    template_name = 'ogolne/rejestracja.html'
-    success_url = reverse_lazy('ogolne:login')
-
 class PanelUrzednikaView(LoginRequiredMixin, TemplateView):
     template_name = 'ogolne/panel_urzednika.html'
 
+# Zmieniono klasę bazową z CreateView na FormView
+class RejestracjaView(FormView):
+    template_name = 'ogolne/rejestracja.html'
+    form_class = RejestracjaForm
+    success_url = reverse_lazy('ogolne:login')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        """
+        Ta metoda działa identycznie w FormView jak i w CreateView.
+        Przetwarza poprawny formularz, tworząc User, Adres i Mieszkaniec.
+        """
+        # 1. Tworzenie obiektu User
+        user = User.objects.create_user(
+            username=form.cleaned_data['username'],
+            password=form.cleaned_data['password'],
+            first_name=form.cleaned_data['first_name'],
+            last_name=form.cleaned_data['last_name'],
+            email=form.cleaned_data['email']
+        )
+
+        # 2. Tworzenie obiektu Adres
+        adres = Adres.objects.create(
+            ulica=form.cleaned_data['ulica'],
+            numer_domu=form.cleaned_data['numer_domu'],
+            numer_mieszkania=form.cleaned_data['numer_mieszkania'],
+            kod_pocztowy=form.cleaned_data['kod_pocztowy'],
+            miejscowosc=form.cleaned_data['miejscowosc']
+        )
+
+        # 3. Tworzenie obiektu Mieszkaniec i łączenie go z User i Adres
+        Mieszkaniec.objects.create(
+            user=user,
+            pesel=form.cleaned_data['pesel'],
+            data_urodzenia=form.cleaned_data['data_urodzenia'],
+            plec=form.cleaned_data['plec'],
+            adres_zamieszkania=adres,
+            adres_zameldowania=adres  # Domyślnie ustawiamy ten sam adres
+        )
+
+        return redirect(self.get_success_url())
+
+
+class LoginView(AuthLoginView):
+    template_name = 'ogolne/login.html'
+
+
 class MojeWnioskiView(LoginRequiredMixin, ListView):
     template_name = 'ogolne/moje_wnioski.html'
-    context_object_name = 'wnioski'
+    context_object_name = 'wnioski_pogrupowane'
 
     def get_queryset(self):
         user = self.request.user
-        # Zbieranie zapytań (querysets) dla każdego typu wniosku
-        zgloszenia_urodzen = ZgloszenieUrodzenia.objects.filter(wnioskodawca=user)
-        wnioski_budowlane = WniosekBudowlany.objects.filter(wnioskodawca=user)
-        wnioski_dotacje = WniosekDotacja.objects.filter(wnioskodawca=user)
-        wnioski_dowody = WniosekDowod.objects.filter(wnioskodawca=user)
-        deklaracje_oproznienia = DeklaracjaOproznienia.objects.filter(wnioskodawca=user)
-        deklaracje_zbiornika = DeklaracjaZbiornika.objects.filter(wnioskodawca=user)
-        deklaracje_smieciowe = DeklaracjaSmieciowa.objects.filter(wnioskodawca=user)
-        wnioski_rejestracja = WniosekRejestracja.objects.filter(wnioskodawca=user)
+        wnioski_pogrupowane = defaultdict(list)
 
-        # Użycie itertools.chain do połączenia wszystkich wyników w jedną listę
-        # a następnie posortowanie jej według daty złożenia (od najnowszych)
-        wszystkie_wnioski = sorted(
-            chain(
-                zgloszenia_urodzen, wnioski_budowlane, wnioski_dotacje,
-                wnioski_dowody, deklaracje_oproznienia, deklaracje_zbiornika,
-                deklaracje_smieciowe, wnioski_rejestracja
-            ),
-            key=lambda wniosek: wniosek.data_zlozenia,
-            reverse=True
-        )
-        return wszystkie_wnioski
-
-class WniosekDetailView(LoginRequiredMixin, DetailView):
-    template_name = 'ogolne/wniosek_detail.html'
-    context_object_name = 'wniosek'
-
-    def get_object(self, queryset=None):
-        pk = self.kwargs.get('pk')
-
-        # Lista wszystkich modeli wniosków do przeszukania
-        models = [
-            ZgloszenieUrodzenia, WniosekBudowlany, WniosekDotacja, WniosekDowod,
-            DeklaracjaOproznienia, DeklaracjaZbiornika, DeklaracjaSmieciowa, WniosekRejestracja
+        # Lista modeli dziedziczących po Wniosek
+        wniosek_models_apps = [
+            ('akt_urodzenia', 'ZgloszenieUrodzenia'),
+            ('budownictwo', 'WniosekBudowlany'),
+            ('dotacje', 'WniosekDotacja'),
+            ('dowody_osobiste', 'WniosekDowod'),
+            ('odpady', 'DeklaracjaSmieciowa'),
+            ('rejestracja_samochodu', 'WniosekRejestracja'),
+            ('ewidencja_zbiornikow', 'DeklaracjaZbiornika'),
+            ('ewidencja_zbiornikow', 'DeklaracjaOproznienia'),
         ]
 
-        # Pętla przez modele w poszukiwaniu obiektu o danym PK, który należy do użytkownika
-        for model in models:
-            try:
-                obj = get_object_or_404(model, pk=pk, wnioskodawca=self.request.user)
-                return obj
-            except model.DoesNotExist:
-                continue # Jeśli nie znaleziono w tym modelu, przejdź do następnego
+        for app_label, model_name in wniosek_models_apps:
+            model = apps.get_model(app_label, model_name)
+            nazwa_grupy = model._meta.verbose_name_plural.title()
+            wnioski = model.objects.filter(wnioskodawca=user).order_by('-data_zlozenia')
+            if wnioski.exists():
+                wnioski_pogrupowane[nazwa_grupy] = list(wnioski)
 
-        # Jeśli obiekt nie zostanie znaleziony w żadnym z modeli, zwróć None (co spowoduje błąd 404)
-        return None
+        return dict(wnioski_pogrupowane)

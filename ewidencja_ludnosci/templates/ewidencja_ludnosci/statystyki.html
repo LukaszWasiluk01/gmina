@@ -1,20 +1,23 @@
-{% extends 'ogolne/base.html' %}
+{% extends "ogolne/base.html" %}
+
+{% block title %}Statystyki Gminy{% endblock %}
+
 {% block content %}
-<h2>Statystyki ludności</h2>
-<table border="1">
-  <tr>
-    <th>Data</th>
-    <th>Mieszkańcy</th>
-    <th>Dzieci</th>
-    <th>Seniorzy</th>
-  </tr>
-  {% for s in statystyki %}
-  <tr>
-    <td>{{ s.data }}</td>
-    <td>{{ s.liczba_mieszkancow }}</td>
-    <td>{{ s.liczba_dzieci }}</td>
-    <td>{{ s.liczba_seniorow }}</td>
-  </tr>
-  {% endfor %}
-</table>
+<div class="container mt-4">
+    <h2>Statystyki Gminy</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Aktualne dane demograficzne</h5>
+            <ul class="list-group list-group-flush">
+                {% for nazwa, wartosc in statystyki.items %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ nazwa }}
+                    <span class="badge bg-primary rounded-pill">{{ wartosc }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <a href="{% url 'ogolne:panel_urzednika' %}" class="btn btn-secondary mt-3">Powrót do panelu</a>
+</div>
 {% endblock %}

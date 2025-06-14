@@ -1,36 +1,25 @@
-# gmina/budownictwo/models.py
+# budownictwo/models.py
 
 from django.db import models
 from django.urls import reverse
-from ogolne.models import Wniosek
-
-class Adres(models.Model):
-    ulica = models.CharField(max_length=100)
-    numer_domu = models.CharField(max_length=10)
-    numer_mieszkania = models.CharField(max_length=10, blank=True, null=True)
-    kod_pocztowy = models.CharField(max_length=6)
-    miejscowosc = models.CharField(max_length=100)
-
-    def __str__(self):
-        return f"{self.ulica} {self.numer_domu}, {self.miejscowosc}"
+from ogolne.models import Wniosek, Adres # Import Adres z aplikacji ogolne
 
 class WniosekBudowlany(Wniosek):
-    # Nadpisujemy statusy na te specyficzne dla budownictwa
-    STATUS_CHOICES = [
-        ('Złożony', 'Złożony'),
-        ('Zweryfikowany', 'Zweryfikowany przez urzędnika'),
-        ('Zatwierdzony', 'Zatwierdzony przez inspektora'),
-        ('Odrzucony', 'Odrzucony'),
-    ]
-
+    # Usunięto zduplikowany model Adres, używamy tego z 'ogolne'
     adres_inwestycji = models.ForeignKey(Adres, on_delete=models.CASCADE)
-    rodzaj_inwestycji = models.CharField(max_length=255)
+    rodzaj_inwestycji = models.CharField(max_length=200)
+    numer_dzialki = models.CharField(max_length=50)
+    # Dodano brakujące pola, które były używane w szablonach
+    tytul = models.CharField(max_length=255, default="Wniosek o pozwolenie na budowę")
+    opis_budowy = models.TextField()
 
-    # Pole status jest teraz dziedziczone, więc je nadpisujemy, a nie tworzymy od nowa
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Złożony')
+    class Meta:
+        verbose_name = "Wniosek budowlany"
+        verbose_name_plural = "Wnioski budowlane"
 
     def __str__(self):
-        return f"Wniosek budowlany: {self.rodzaj_inwestycji}"
+        return f"Wniosek budowlany nr {self.id} dla działki {self.numer_dzialki}"
 
     def get_absolute_url(self):
-        return reverse('ogolne:wniosek_detail', kwargs={'pk': self.pk})
+        # Url do widoku szczegółowego dla urzędnika lub wnioskodawcy
+        return reverse('budownictwo:rozpatrz_wniosek', kwargs={'pk': self.pk})

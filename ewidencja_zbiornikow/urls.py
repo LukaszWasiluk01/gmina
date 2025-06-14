@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    ListaDeklaracjiView,
+    ListaDeklaracjiZbiornikowView,
     ZadeklarujOproznienieView,
     ZadeklarujZbiornikView,
 )
@@ -15,5 +15,5 @@ urlpatterns = [
         ZadeklarujOproznienieView.as_view(),
         name="zadeklaruj_oproznienie",
     ),
-    path("lista/", ListaDeklaracjiView.as_view(), name="lista_deklaracji"),
+    path("lista/", ListaDeklaracjiZbiornikowView.as_view(), name="lista_deklaracji"),
 ]

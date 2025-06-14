@@ -1,34 +1,36 @@
-# gmina/dotacje/models.py
+# dotacje/models.py
 
 from django.db import models
 from django.urls import reverse
-from ogolne.models import Wniosek  # WAŻNE: Importujemy bazowy model Wniosek
+from ogolne.models import Wniosek
 
-# WAŻNE: Zmieniamy dziedziczenie z models.Model na Wniosek
 class WniosekDotacja(Wniosek):
-    # Definiujemy statusy specyficzne dla tego wniosku.
+    # Rozbudowana lista statusów odzwierciedlająca cały proces
     STATUS_CHOICES = [
-        ('Złożony', 'Złożony'),
-        ('W weryfikacji komisji', 'W weryfikacji komisji'),
-        ('Przekazany do wójta', 'Przekazany do wójta'),
-        ('Zatwierdzony', 'Zatwierdzony'),
+        ('Złożony', 'Złożony przez wnioskodawcę'),
+        ('Do oceny komisji', 'Przekazany do oceny komisji'),
+        ('Do decyzji wójta', 'Oczekuje na decyzję wójta'),
+        ('Zatwierdzony', 'Zatwierdzony przez wójta'),
+        ('Do realizacji (Skarbnik)', 'Oczekuje na przelew skarbnika'),
+        ('Zrealizowany', 'Dotacja wypłacona'),
         ('Odrzucony', 'Odrzucony'),
-        ('Zrealizowany', 'Zrealizowany')
+        ('Braki formalne', 'Wezwanie do uzupełnienia braków'),
     ]
 
-    # Pola specyficzne tylko dla wniosku o dotację
+    # Nadpisujemy pole status z modelu bazowego
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Złożony')
+
     tytul_projektu = models.CharField(max_length=255)
     opis_projektu = models.TextField()
     wnioskowana_kwota = models.DecimalField(max_digits=10, decimal_places=2)
-
-    # Pola 'wnioskodawca' i 'status' są teraz dziedziczone, więc ich tu nie powtarzamy.
+    kwota_przyznana = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         verbose_name = "Wniosek o dotację"
         verbose_name_plural = "Wnioski o dotacje"
 
     def __str__(self):
-        return self.tytul_projektu
+        return f'Wniosek o dotację: "{self.tytul_projektu}"'
 
     def get_absolute_url(self):
-        return reverse('ogolne:wniosek_detail', kwargs={'pk': self.pk})
+        return reverse('dotacje:rozpatrz_wniosek', kwargs={'pk': self.pk})

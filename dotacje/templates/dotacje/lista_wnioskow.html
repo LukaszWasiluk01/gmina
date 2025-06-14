@@ -1,18 +1,28 @@
 {% extends 'ogolne/base.html' %}
+
 {% block content %}
-<h2>Lista wniosków o dotacje</h2>
-<ul>
-  {% for wniosek in wnioski %}
-    <li>
-      {{ wniosek.tytul }} – {{ wniosek.status }}
-      {% if user.groups.first.name == 'Komisja ds. dotacji' %}
-        [<a href="{% url 'dotacje:komisja' wniosek.pk %}">Komisja</a>]
-      {% elif user.groups.first.name == 'Wójt' %}
-        [<a href="{% url 'dotacje:wojt' wniosek.pk %}">Wójt</a>]
-      {% elif user.groups.first.name == 'Urzędnik ds. dotacji' %}
-        [<a href="{% url 'dotacje:przelej' wniosek.pk %}">Przelej</a>]
-      {% endif %}
-    </li>
-  {% endfor %}
-</ul>
+<h2>Lista Wniosków o Dotacje</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tytuł Projektu</th>
+            <th>Status</th>
+            <th>Akcja</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for wniosek in wnioski %}
+        <tr>
+            <td>{{ wniosek.tytul_projektu }}</td>
+            <td><span class="badge bg-info">{{ wniosek.get_status_display }}</span></td>
+            <td>
+                {# Link do akcji jest zawsze ten sam, ale pojawia się warunkowo #}
+                <a href="{% url 'dotacje:rozpatrz_wniosek' wniosek.pk %}" class="btn btn-primary btn-sm">
+                    Rozpatrz
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

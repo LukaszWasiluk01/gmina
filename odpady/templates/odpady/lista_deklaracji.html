@@ -6,7 +6,7 @@
     <li>
       {{ d.wnioskodawca.username }} – {{ d.liczba_osob }} os. – {{ d.status }}
       {% if user.groups.first.name == 'Urzędnik ds. gospodarki odpadami' and d.status != 'wyliczona' %}
-        [<a href="{% url 'gospodarka_odpadami:wylicz' d.pk %}">Wylicz opłatę</a>]
+        [<a href="{% url 'gospodarka_odpadami:wylicz_oplate' d.pk %}">Wylicz opłatę</a>]
       {% endif %}
     </li>
   {% endfor %}

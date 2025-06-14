@@ -1,20 +1,13 @@
-# gmina/rejestracja_samochodu/views.py
+# rejestracja_samochodu/views.py
 
 from django.views.generic import CreateView, ListView, UpdateView
-from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+
 from .models import WniosekRejestracja
 
-class WnioskodawcaMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Wnioskodawca').exists()
-
-class UrzednikRejestracjiMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.groups.filter(name='Urzędnik ds. rejestracji samochodów').exists()
-
-# POPRAWIONO NAZWY WIDOKÓW
-class ZlozWniosekRejestracjaView(LoginRequiredMixin, WnioskodawcaMixin, CreateView):
+# Zmieniono nazwy widoków dla spójności
+class ZlozWniosekRejestracjaView(LoginRequiredMixin, CreateView):
     model = WniosekRejestracja
     fields = ['marka_pojazdu', 'model_pojazdu', 'rok_produkcji', 'numer_vin']
     template_name = 'rejestracja_samochodu/zloz_wniosek.html'
@@ -24,16 +17,22 @@ class ZlozWniosekRejestracjaView(LoginRequiredMixin, WnioskodawcaMixin, CreateVi
         form.instance.wnioskodawca = self.request.user
         return super().form_valid(form)
 
-class ListaWnioskowRejestracjaView(LoginRequiredMixin, UrzednikRejestracjiMixin, ListView):
+class ListaWnioskowRejestracjaView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = WniosekRejestracja
     template_name = 'rejestracja_samochodu/lista_wnioskow.html'
     context_object_name = 'wnioski'
 
-    def get_queryset(self):
-        return WniosekRejestracja.objects.filter(status='Złożony')
+    def test_func(self):
+        return self.request.user.groups.filter(name='urzednik_ds_rejestracji_samochodow').exists()
 
-class RozpatrzWniosekRejestracjaView(LoginRequiredMixin, UrzednikRejestracjiMixin, UpdateView):
+class RozpatrzWniosekRejestracjaView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = WniosekRejestracja
-    fields = ['status', 'powod_odrzucenia']
+    # Urzędnik może edytować status, uzasadnienie i nadać numer rejestracyjny
+    fields = ['status', 'uzasadnienie_odrzucenia', 'numer_rejestracyjny']
     template_name = 'rejestracja_samochodu/rozpatrz_wniosek.html'
+    context_object_name = 'wniosek'
+    # Poprawiono success_url na poprawną nazwę
     success_url = reverse_lazy('rejestracja_samochodu:lista_wnioskow_rejestracja')
+
+    def test_func(self):
+        return self.request.user.groups.filter(name='urzednik_ds_rejestracji_samochodow').exists()

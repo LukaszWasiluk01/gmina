@@ -5,7 +5,7 @@
   {% for wniosek in wnioski %}
     <li>
       {{ wniosek.marka }} {{ wniosek.model }} - {{ wniosek.status }}
-      [<a href="{% url 'rejestracja_samochodu:rozpatrz' wniosek.pk %}">Rozpatrz</a>]
+      [<a href="{% url 'rejestracja_samochodu:rozpatrz_wniosek_rejestracja' wniosek.pk %}">Rozpatrz</a>]
     </li>
   {% endfor %}
 </ul>

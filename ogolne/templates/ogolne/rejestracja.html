@@ -1,28 +1,26 @@
 {% extends "ogolne/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}Rejestracja{% endblock %}
+{% block title %}Rejestracja nowego mieszkańca{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="card-title text-center">Zarejestruj się</h2>
-            </div>
-            <div class="card-body">
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {{ form|crispy }}
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary mt-3">Zarejestruj</button>
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer text-center">
-                <p class="mb-0">
-                    Masz już konto? <a href="{% url 'login' %}">Zaloguj się tutaj</a>.
-                </p>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Formularz Rejestracyjny</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Zarejestruj się</button>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <small>Masz już konto? <a href="{% url 'ogolne:login' %}">Zaloguj się tutaj</a>.</small>
+                </div>
             </div>
         </div>
     </div>

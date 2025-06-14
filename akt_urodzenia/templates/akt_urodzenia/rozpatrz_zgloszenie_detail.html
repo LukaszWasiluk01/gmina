@@ -1,33 +1,49 @@
-{% extends 'ogolne/base.html' %}
+{% extends "ogolne/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Szczegóły zgłoszenia urodzenia{% endblock %}
 
 {% block content %}
-<h2>Szczegóły zgłoszenia</h2>
+<div class="container mt-4">
+    <h2>Szczegóły zgłoszenia nr {{ zgloszenie.id }}</h2>
+    <div class="card">
+        <div class="card-body">
+            <p><strong>Wnioskodawca:</strong> {{ zgloszenie.wnioskodawca.first_name }} {{ zgloszenie.wnioskodawca.last_name }}</p>
+            <p><strong>Data złożenia:</strong> {{ zgloszenie.data_zlozenia }}</p>
+            <p><strong>Status:</strong> {{ zgloszenie.get_status_display }}</p>
+            <hr>
+            <h4>Dane dziecka</h4>
+            <p><strong>Imię i nazwisko:</strong> {{ zgloszenie.imie_dziecka }} {{ zgloszenie.nazwisko_dziecka }}</p>
+            <p><strong>Płeć:</strong> {{ zgloszenie.get_plec_dziecka_display }}</p>
+            <p><strong>Data i miejsce urodzenia:</strong> {{ zgloszenie.data_urodzenia_dziecka }} w {{ zgloszenie.miejsce_urodzenia_dziecka }}</p>
+            {% if zgloszenie.pesel_dziecka %}
+                <p><strong>Wygenerowany PESEL:</strong> {{ zgloszenie.pesel_dziecka }}</p>
+            {% endif %}
+            <hr>
+            <h4>Dane rodziców</h4>
+            <p><strong>Matka:</strong> {{ zgloszenie.imie_matki }} {{ zgloszenie.nazwisko_rodowe_matki }}</p>
+            <p><strong>Ojciec:</strong> {{ zgloszenie.imie_ojca }} {{ zgloszenie.nazwisko_ojca }}</p>
 
-<p><strong>PESEL dziecka:</strong> {{ z.mieszkaniec.pesel }}</p>
-<p><strong>Imię i nazwisko dziecka:</strong> {{ z.mieszkaniec.imie }} {{ z.mieszkaniec.nazwisko }}</p>
-<p><strong>Data zgłoszenia:</strong> {{ z.data_zlozenia }}</p>
+            {% if zgloszenie.uzasadnienie_odrzucenia %}
+                <div class="alert alert-danger mt-3">
+                    <strong>Powód odrzucenia:</strong> {{ zgloszenie.uzasadnienie_odrzucenia }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
-{% if error %}
-  <p style="color:red;">{{ error }}</p>
-{% endif %}
+    {% if perms.akt_urodzenia.change_zgloszenieurodzenia and zgloszenie.status == 'Złożony' %}
+        <div class="mt-4">
+            <h3>Operacje</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" name="action" value="accept" class="btn btn-success">Zaakceptuj i wygeneruj PESEL</button>
+                <button type="submit" name="action" value="reject" class="btn btn-danger">Odrzuć</button>
+            </form>
+        </div>
+    {% endif %}
 
-<form method="post">
-  {% csrf_token %}
-  <p><strong>Rodzic składający zgłoszenie:</strong> {{ z.mieszkaniec }}</p>
-  <p><strong>Data urodzenia:</strong> {{ z.data_urodzenia }}</p>
-
-  <label for="reason">Powód odrzucenia (jeśli dotyczy):</label>
-  <textarea name="reason" id="reason" rows="4" cols="50"></textarea><br>
-
-  {% if error %}
-    <p style="color: red;">{{ error }}</p>
-  {% endif %}
-
-  <button type="submit" name="accept">Zatwierdź</button>
-  <button type="submit" name="reject">Odrzuć</button>
-</form>
-
-
-
-<p><a href="{% url 'akt_urodzenia:lista_zgloszen_urodzen' %}">Wróć do listy</a></p>
+    <a href="{% if perms.akt_urodzenia.view_zgloszenieurodzenia %}{% url 'akt_urodzenia:lista_zgloszen' %}{% else %}{% url 'ogolne:moje_wnioski' %}{% endif %}" class="btn btn-secondary mt-3">Powrót</a>
+</div>
 {% endblock %}
