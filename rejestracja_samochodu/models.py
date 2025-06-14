@@ -1,26 +1,32 @@
-from django.contrib.auth.models import User
+# lukaszwasiluk01/gmina/gmina-master/rejestracja_samochodu/models.py
+
 from django.db import models
+from django.urls import reverse
+from ogolne.models import Wniosek  # Import bazowego modelu Wniosek
 
-# Create your models here.
-
-
-class WniosekRejestracjaSamochodu(models.Model):
-    STATUSY = [
-        ("oczekuje", "Oczekuje"),
-        ("zatwierdzony", "Zatwierdzony"),
-        ("odrzucony", "Odrzucony"),
+# Model WniosekRejestracja dziedziczy teraz po Wniosek
+class WniosekRejestracja(Wniosek):
+    STATUS_CHOICES = [
+        ('Złożony', 'Złożony'),
+        ('W trakcie weryfikacji', 'W trakcie weryfikacji'),
+        ('Zatwierdzony', 'Zatwierdzony'),
+        ('Odrzucony', 'Odrzucony'),
     ]
 
-    wnioskodawca = models.ForeignKey(User, on_delete=models.CASCADE)
-    marka = models.CharField(max_length=100)
-    model = models.CharField(max_length=100)
-    numer_rejestracyjny = models.CharField(max_length=20)
-    status = models.CharField(max_length=20, choices=STATUSY, default="oczekuje")
-    data_zlozenia = models.DateField(auto_now_add=True)
+    marka_pojazdu = models.CharField(max_length=100)
+    model_pojazdu = models.CharField(max_length=100)
+    rok_produkcji = models.PositiveIntegerField()
+    numer_vin = models.CharField(max_length=17)
+
+    # Pola 'status', 'wnioskodawca' i 'data_zlozenia' są dziedziczone z Wniosek
 
     class Meta:
         verbose_name = "Wniosek o rejestrację samochodu"
         verbose_name_plural = "Wnioski o rejestrację samochodu"
 
     def __str__(self):
-        return f"{self.marka} {self.model} - {self.numer_rejestracyjny}"
+        return f"{self.marka_pojazdu} {self.model_pojazdu} ({self.numer_vin})"
+
+    def get_absolute_url(self):
+        # Link do ogólnego widoku szczegółów wniosku
+        return reverse('ogolne:wniosek_detail', kwargs={'pk': self.pk})

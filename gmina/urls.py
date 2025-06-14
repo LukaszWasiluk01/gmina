@@ -1,48 +1,28 @@
-"""
-URL configuration for gmina project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+# lukaszwasiluk01/gmina/gmina-master/gmina/urls.py
 
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from ogolne.views import IndexView, RejestracjaView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", include("ogolne.urls")),
-    path("akt_urodzenia/", include("akt_urodzenia.urls")),
-    path("zbiorniki/", include("ewidencja_zbiornikow.urls")),
-    path("podatki/", include("podatki.urls")),
-    path("ludnosc/", include("ewidencja_ludnosci.urls")),
-    path("samochody/", include("rejestracja_samochodu.urls")),
-    path("dotacje/", include("dotacje.urls")),
-    path("budownictwo/", include("budownictwo.urls")),
-    path("odpady/", include("odpady.urls")),
-    path("dowody/", include("dowody_osobiste.urls")),
-]
+    path('admin/', admin.site.urls),
 
-# Autoryzacja
-from django.contrib.auth import views as auth_views
+    # Strona główna i uwierzytelnianie z aplikacji ogolne
+    path('', IndexView.as_view(), name='index'),
+    path('rejestracja/', RejestracjaView.as_view(), name='rejestracja'),
+    path('login/', auth_views.LoginView.as_view(template_name='ogolne/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 
-from ogolne.views import RejestracjaView
-
-urlpatterns += [
-    path(
-        "login/",
-        auth_views.LoginView.as_view(template_name="ogolne/login.html"),
-        name="login",
-    ),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("register/", RejestracjaView.as_view(), name="register"),
+    # Dołączenie adresów URL z każdej aplikacji
+    path('ogolne/', include('ogolne.urls', namespace='ogolne')),
+    path('akty-urodzenia/', include('akt_urodzenia.urls', namespace='akt_urodzenia')),
+    path('budownictwo/', include('budownictwo.urls', namespace='budownictwo')),
+    path('dotacje/', include('dotacje.urls', namespace='dotacje')),
+    path('dowody-osobiste/', include('dowody_osobiste.urls', namespace='dowody_osobiste')),
+    path('ewidencja-ludnosci/', include('ewidencja_ludnosci.urls', namespace='ewidencja_ludnosci')),
+    path('ewidencja-zbiornikow/', include('ewidencja_zbiornikow.urls', namespace='ewidencja_zbiornikow')),
+    path('odpady/', include('odpady.urls', namespace='odpady')),
+    path('podatki/', include('podatki.urls', namespace='podatki')),
+    path('rejestracja-samochodu/', include('rejestracja_samochodu.urls', namespace='rejestracja_samochodu')),
 ]
