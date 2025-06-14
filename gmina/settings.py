@@ -49,8 +49,8 @@ INSTALLED_APPS = [
     "odpady",
     "dowody_osobiste",
     # Inne
-    'crispy_forms',
-    'crispy_bootstrap5',
+    "crispy_forms",
+    "crispy_bootstrap5",
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -116,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LOGIN_URL = 'ogolne:login'
-LOGIN_REDIRECT_URL = 'ogolne:index'
-LOGOUT_REDIRECT_URL = 'ogolne:index'
+LOGIN_URL = "ogolne:login"
+LOGIN_REDIRECT_URL = "ogolne:index"
+LOGOUT_REDIRECT_URL = "ogolne:index"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/

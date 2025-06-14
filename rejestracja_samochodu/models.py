@@ -1,8 +1,8 @@
-# rejestracja_samochodu/models.py
-
 from django.db import models
 from django.urls import reverse
+
 from ogolne.models import Wniosek
+
 
 class WniosekRejestracja(Wniosek):
     marka_pojazdu = models.CharField(max_length=100)
@@ -19,4 +19,6 @@ class WniosekRejestracja(Wniosek):
         return f"Wniosek o rejestrację {self.marka_pojazdu} {self.model_pojazdu} (VIN: {self.numer_vin})"
 
     def get_absolute_url(self):
-        return reverse('rejestracja_samochodu:rozpatrz_wniosek_rejestracja', kwargs={'pk': self.pk})
+        return reverse(
+            "rejestracja_samochodu:rozpatrz_wniosek_rejestracja", kwargs={"pk": self.pk}
+        )

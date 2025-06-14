@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Mieszkaniec, Adres
+from .models import Adres, Mieszkaniec
 
 # Register your models here.
 

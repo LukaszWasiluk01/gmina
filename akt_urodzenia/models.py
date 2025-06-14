@@ -1,13 +1,15 @@
-# akt_urodzenia/models.py
-
 from django.db import models
 from django.urls import reverse
+
 from ogolne.models import Wniosek
+
 
 class ZgloszenieUrodzenia(Wniosek):
     imie_dziecka = models.CharField(max_length=50)
     nazwisko_dziecka = models.CharField(max_length=50)
-    plec_dziecka = models.CharField(max_length=10, choices=[('M', 'Mężczyzna'), ('K', 'Kobieta')])
+    plec_dziecka = models.CharField(
+        max_length=10, choices=[("M", "Mężczyzna"), ("K", "Kobieta")]
+    )
     data_urodzenia_dziecka = models.DateField()
     miejsce_urodzenia_dziecka = models.CharField(max_length=100)
     imie_matki = models.CharField(max_length=50)
@@ -24,4 +26,4 @@ class ZgloszenieUrodzenia(Wniosek):
         return f"Zgłoszenie urodzenia dla {self.imie_dziecka} {self.nazwisko_dziecka}"
 
     def get_absolute_url(self):
-        return reverse('akt_urodzenia:zgloszenie_detail', kwargs={'pk': self.pk})
+        return reverse("akt_urodzenia:zgloszenie_detail", kwargs={"pk": self.pk})

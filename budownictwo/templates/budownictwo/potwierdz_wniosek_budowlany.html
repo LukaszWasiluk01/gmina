@@ -3,7 +3,6 @@
 {% block content %}
 <h2>Potwierdź dane wniosku</h2>
 <ul>
-    {# Wyświetla dane z formularza, które zostały wprowadzone #}
     <li><strong>Tytuł:</strong> {{ form.cleaned_data.tytul }}</li>
     <li><strong>Opis budowy:</strong> {{ form.cleaned_data.opis_budowy }}</li>
     <li><strong>Ulica:</strong> {{ form.cleaned_data.ulica }}</li>
@@ -12,24 +11,19 @@
     <li><strong>Miejscowość:</strong> {{ form.cleaned_data.miejscowosc }}</li>
 </ul>
 
-{# Formularz do ostatecznego zatwierdzenia wniosku #}
 <form method="post" action="{% url 'budownictwo:potwierdz_wniosek_budowlany' %}">
     {% csrf_token %}
-    {# Przekazuje wszystkie pola formularza jako ukryte inputy, aby mogły być ponownie walidowane #}
     {% for field in form %}
         <input type="hidden" name="{{ field.name }}" value="{{ field.value|default_if_none:'' }}">
     {% endfor %}
     <button type="submit">Zatwierdź</button>
 </form>
 
-{# Formularz do powrotu i zmiany danych wniosku #}
 <form method="post" action="{% url 'budownictwo:zloz_wniosek_budowlany' %}">
     {% csrf_token %}
-    {# Przekazuje wszystkie pola formularza jako ukryte inputy, aby dane były zachowane #}
     {% for field in form %}
         <input type="hidden" name="{{ field.name }}" value="{{ field.value|default_if_none:'' }}">
     {% endfor %}
-    {# Dodatkowy ukryty input, aby widok ZlozWniosekBudowlanyView wiedział, że to prośba o zmianę #}
     <input type="hidden" name="zmien" value="1">
     <button type="submit">Zmień</button>
 </form>

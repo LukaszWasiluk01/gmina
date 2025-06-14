@@ -1,8 +1,7 @@
-# podatki/models.py
-
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from django.urls import reverse
+
 
 class DecyzjaPodatkowa(models.Model):
     podatnik = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -19,11 +18,14 @@ class DecyzjaPodatkowa(models.Model):
         return f"Decyzja podatkowa dla {self.podatnik.username} na rok {self.rok_podatkowy}"
 
     def get_absolute_url(self):
-        # Link do widoku, gdzie można zarejestrować wpłatę
-        return reverse('podatki:rejestruj_wplate', kwargs={'pk': self.pk})
+
+        return reverse("podatki:rejestruj_wplate", kwargs={"pk": self.pk})
+
 
 class Wplata(models.Model):
-    decyzja = models.ForeignKey(DecyzjaPodatkowa, on_delete=models.CASCADE, related_name='wplaty')
+    decyzja = models.ForeignKey(
+        DecyzjaPodatkowa, on_delete=models.CASCADE, related_name="wplaty"
+    )
     data_wplaty = models.DateField(auto_now_add=True)
     kwota_wplaty = models.DecimalField(max_digits=10, decimal_places=2)
     urzednik = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

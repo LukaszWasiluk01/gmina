@@ -1,57 +1,69 @@
-# dotacje/forms.py
-
 from django import forms
+
 from .models import WniosekDotacja
+
 
 class WniosekDotacjaForm(forms.ModelForm):
     class Meta:
         model = WniosekDotacja
-        fields = ['tytul_projektu', 'opis_projektu', 'wnioskowana_kwota']
+        fields = ["tytul_projektu", "opis_projektu", "wnioskowana_kwota"]
+
 
 class WeryfikacjaFormalnaForm(forms.ModelForm):
-    """Formularz dla urzędnika ds. dotacji."""
+
     class Meta:
         model = WniosekDotacja
-        fields = ['status']
+        fields = ["status"]
         widgets = {
-            'status': forms.Select(choices=[
-                ('Do oceny komisji', 'Poprawny formalnie (przekaż do komisji)'),
-                ('Braki formalne', 'Wezwij do uzupełnienia braków'),
-                ('Odrzucony', 'Odrzuć (błędy nieusuwalne)'),
-            ])
+            "status": forms.Select(
+                choices=[
+                    ("Do oceny komisji", "Poprawny formalnie (przekaż do komisji)"),
+                    ("Braki formalne", "Wezwij do uzupełnienia braków"),
+                    ("Odrzucony", "Odrzuć (błędy nieusuwalne)"),
+                ]
+            )
         }
+
 
 class OcenaKomisjiForm(forms.ModelForm):
-    """Formularz dla komisji."""
+
     class Meta:
         model = WniosekDotacja
-        fields = ['status']
+        fields = ["status"]
         widgets = {
-            'status': forms.Select(choices=[
-                ('Do decyzji wójta', 'Rekomendacja pozytywna (przekaż do wójta)'),
-                ('Odrzucony', 'Rekomendacja negatywna (odrzuć)'),
-            ])
+            "status": forms.Select(
+                choices=[
+                    ("Do decyzji wójta", "Rekomendacja pozytywna (przekaż do wójta)"),
+                    ("Odrzucony", "Rekomendacja negatywna (odrzuć)"),
+                ]
+            )
         }
+
 
 class DecyzjaWojtaForm(forms.ModelForm):
-    """Formularz dla wójta."""
+
     class Meta:
         model = WniosekDotacja
-        fields = ['status', 'kwota_przyznana'] # Wójt może też ustalić finalną kwotę
+        fields = ["status", "kwota_przyznana"]
         widgets = {
-            'status': forms.Select(choices=[
-                ('Zatwierdzony', 'Zatwierdź dotację'),
-                ('Odrzucony', 'Odrzuć dotację'),
-            ])
+            "status": forms.Select(
+                choices=[
+                    ("Zatwierdzony", "Zatwierdź dotację"),
+                    ("Odrzucony", "Odrzuć dotację"),
+                ]
+            )
         }
 
+
 class RealizacjaSkarbnikaForm(forms.ModelForm):
-    """Formularz dla skarbnika."""
+
     class Meta:
         model = WniosekDotacja
-        fields = ['status']
+        fields = ["status"]
         widgets = {
-            'status': forms.Select(choices=[
-                ('Zrealizowany', 'Potwierdź wypłatę dotacji'),
-            ])
+            "status": forms.Select(
+                choices=[
+                    ("Zrealizowany", "Potwierdź wypłatę dotacji"),
+                ]
+            )
         }
