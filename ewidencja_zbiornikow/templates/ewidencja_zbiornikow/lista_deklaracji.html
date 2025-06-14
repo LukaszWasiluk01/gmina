@@ -1,0 +1,20 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Lista deklaracji zbiorników</h2>
+<ul>
+  {% for d in deklaracje %}
+    <li>
+      {{ d.adres }} – {{ d.pojemnosc_l }} l –
+      {% if d.zatwierdzony %}
+         Zatwierdzony
+      {% else %}
+        <form method="post" action="">
+          {% csrf_token %}
+          <input type="hidden" name="zatwierdz_id" value="{{ d.id }}">
+          <button type="submit">Zatwierdź</button>
+        </form>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

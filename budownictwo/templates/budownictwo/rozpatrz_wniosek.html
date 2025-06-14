@@ -1,0 +1,29 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Weryfikacja wniosku: {{ object.tytul }}</h2>
+
+<p><strong>Opis budowy:</strong></p>
+<p>{{ object.opis_budowy|linebreaks }}</p>
+
+<p><strong>Adres działki:</strong></p>
+<ul>
+  <li>Ulica: {{ object.adres_dzialki.ulica }}</li>
+  <li>Numer domu: {{ object.adres_dzialki.numer_domu }}</li>
+  <li>Kod pocztowy: {{ object.adres_dzialki.kod_pocztowy }}</li>
+  <li>Miejscowość: {{ object.adres_dzialki.miejscowosc }}</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="form-group">
+        {{ form.powod_odrzucenia.label_tag }}
+        {{ form.powod_odrzucenia }}
+        {{ form.powod_odrzucenia.errors }}
+    </div>
+
+    <button type="submit" name="accept" class="btn btn-success">Zatwierdź</button>
+    <button type="submit" name="reject" class="btn btn-danger">Odrzuć</button>
+</form>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Lista deklaracji</h2>
+<ul>
+  {% for d in deklaracje %}
+    <li>
+      {{ d.wnioskodawca.username }} – {{ d.liczba_osob }} os. – {{ d.status }}
+      {% if user.groups.first.name == 'Urzędnik ds. gospodarki odpadami' and d.status != 'wyliczona' %}
+        [<a href="{% url 'gospodarka_odpadami:wylicz' d.pk %}">Wylicz opłatę</a>]
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

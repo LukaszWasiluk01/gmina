@@ -1,0 +1,13 @@
+{% extends 'ogolne/base.html' %}
+
+{% block content %}
+<h2>Status zgłoszenia został zaktualizowany</h2>
+
+<p>Nowy status: <strong>{{ z.get_status_display }}</strong></p>
+
+{% if z.status == 'odrzucone' %}
+  <p>Powód odrzucenia: {{ z.powod_odrzucenia }}</p>
+{% endif %}
+
+<a href="{% url 'akt_urodzenia:lista_zgloszen_urodzen' %}">Wróć do listy</a>
+{% endblock %}

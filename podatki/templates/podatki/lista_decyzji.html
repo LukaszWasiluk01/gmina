@@ -1,0 +1,9 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Lista decyzji podatkowych</h2>
+<ul>
+  {% for d in decyzje %}
+    <li>{{ d.podatnik.username }} – {{ d.tytul }} – {{ d.kwota }} zł</li>
+  {% endfor %}
+</ul>
+{% endblock %}

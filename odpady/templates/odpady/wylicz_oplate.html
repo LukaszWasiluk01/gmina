@@ -1,0 +1,9 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Wylicz opłatę za śmieci</h2>
+<p>Typ zabudowy: {{ object.typ_zabudowy }}</p>
+<p>Liczba osób: {{ object.liczba_osob }}</p>
+<form method="post">{% csrf_token %}
+  <button type="submit">Wylicz</button>
+</form>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'ogolne/base.html' %}
+
+{% block content %}
+<h2>Złóż wniosek budowlany</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Dalej</button>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'ogolne/base.html' %}
+
+{% block content %}
+<h2>Lista wniosków budowlanych</h2>
+
+<ul>
+  {% for wniosek in wnioski %}
+    {% if is_budownictwo or is_inspektor %}
+    <li>
+      {{ wniosek.data_zlozenia|date:"Y-m-d H:i" }} – {{ wniosek.tytul }} ({{ wniosek.status }})
+
+      {% if is_budownictwo %}
+        <a href="{% url 'budownictwo:weryfikuj' wniosek.pk %}">Rozpatrz wniosek</a>
+      {% elif is_inspektor %}
+        {% if wniosek.status == 'zweryfikowany' %}
+          <a href="{% url 'budownictwo:decyzja' wniosek.pk %}">Wydaj decyzję</a>
+        {% endif %}
+      {% endif %}
+    </li>
+    {% endif %}
+  {% empty %}
+    <li>Brak wniosków</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'ogolne:index' %}">← Wróć</a>
+{% endblock %}

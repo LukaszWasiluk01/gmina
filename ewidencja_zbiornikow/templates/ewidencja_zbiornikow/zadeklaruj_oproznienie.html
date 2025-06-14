@@ -1,0 +1,8 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Zadeklaruj opróżnienie zbiornika</h2>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Wyślij</button>
+</form>
+{% endblock %}

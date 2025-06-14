@@ -1,0 +1,66 @@
+{% extends "ogolne/base.html" %}
+
+{% block content %}
+<h2>Panel urzędnika</h2>
+
+<p>Witaj, {{ user.get_full_name|default:user.username }}</p>
+
+<h3>Dostępne funkcje:</h3>
+<ul>
+  {% if is_usc %}
+  <li><a href="{% url 'akt_urodzenia:lista_zgloszen_urodzen' %}">Zweryfikuj zgłoszenia urodzeń</a></li>
+{% endif %}
+
+  {% if is_zbiorniki %}
+    <li><a href="{% url 'ewidencja_zbiornikow:lista_deklaracji' %}">Zweryfikuj deklaracje zbiorników</a></li>
+  {% endif %}
+
+  {% if is_podatki %}
+    <li><a href="{% url 'podatki:lista_decyzji' %}">Generuj decyzje podatkowe</a></li>
+    <li><a href="{% url 'podatki:rejestruj_wplate' %}">Rejestruj wpłaty</a></li>
+  {% endif %}
+
+  {% if is_ludnosc %}
+    <li><a href="{% url 'ewidencja_ludnosci:aktualizuj' %}">Aktualizuj statystykę ludności</a></li>
+  {% endif %}
+
+  {% if is_statystyka %}
+    <li><a href="{% url 'ewidencja_ludnosci:statystyki' %}">Generuj statystyki</a></li>
+  {% endif %}
+
+  {% if is_samochody %}
+    <li><a href="{% url 'rejestracja_samochodu:lista' %}">Rozpatrz wniosek o rejestrację samochodu</a></li>
+  {% endif %}
+
+  {% if is_dotacje %}
+    <li><a href="{% url 'dotacje:lista' %}">Zweryfikuj wnioski o dotację</a></li>
+    <li><a href="{% url 'dotacje:lista' %}">Przelej dotację</a></li>
+  {% endif %}
+
+  {% if is_komisja_dotacje %}
+    <li><a href="{% url 'dotacje:lista' %}">Zweryfikuj projekty dotacyjne</a></li>
+  {% endif %}
+
+  {% if is_wojt %}
+    <li><a href="{% url 'dotacje:lista' %}">Rozpatrz rekomendacje komisji</a></li>
+  {% endif %}
+
+  {% if is_budownictwo %}
+    <li><a href="{% url 'budownictwo:lista' %}">Zweryfikuj wnioski budowlane</a></li>
+  {% endif %}
+
+  {% if is_inspektor %}
+    <li><a href="{% url 'budownictwo:lista' %}">Wydaj decyzję administracyjną</a></li>
+  {% endif %}
+
+  {% if is_odpady %}
+    <li><a href="{% url 'odpady:lista' %}">Wylicz opłaty za odpady</a></li>
+  {% endif %}
+
+  {% if is_dowody %}
+    <li><a href="{% url 'dowody_osobiste:lista' %}">Rozpatrz wniosek o dowód osobisty</a></li>
+  {% endif %}
+</ul>
+
+<p><a href="{% url 'ogolne:index' %}">Powrót do strony głównej</a></p>
+{% endblock %}

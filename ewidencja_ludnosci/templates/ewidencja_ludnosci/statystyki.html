@@ -1,0 +1,20 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Statystyki ludności</h2>
+<table border="1">
+  <tr>
+    <th>Data</th>
+    <th>Mieszkańcy</th>
+    <th>Dzieci</th>
+    <th>Seniorzy</th>
+  </tr>
+  {% for s in statystyki %}
+  <tr>
+    <td>{{ s.data }}</td>
+    <td>{{ s.liczba_mieszkancow }}</td>
+    <td>{{ s.liczba_dzieci }}</td>
+    <td>{{ s.liczba_seniorow }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

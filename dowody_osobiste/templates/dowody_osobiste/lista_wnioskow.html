@@ -1,0 +1,14 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Lista wniosków o dowód osobisty</h2>
+<ul>
+  {% for w in wnioski %}
+    <li>
+      {{ w.nazwisko }} – {{ w.status }}
+      {% if user.groups.first.name == 'Urzędnik ds. wydawania dowodów osobistych' %}
+        [<a href="{% url 'dowody:rozpatrz' w.pk %}">Rozpatrz</a>]
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

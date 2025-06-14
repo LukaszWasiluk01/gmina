@@ -1,0 +1,21 @@
+{% extends 'ogolne/base.html' %}
+
+{% block content %}
+<h2>Moje wnioski</h2>
+{% if wszystkie_wnioski %}
+    {% for nazwa_modelu, lista in wszystkie_wnioski %}
+        <h3>{{ nazwa_modelu }}</h3>
+        <ul>
+            {% for wniosek in lista %}
+                <li>
+                    {{ wniosek.instance.tytul }} – {{ wniosek.instance.data_zlozenia|date:"Y-m-d" }}
+                    – {% if wniosek.instance.status == "zaakceptowane" %}zatwierdzony{% elif wniosek.instance.status == "oczekuje" %}oczekuje{% else %}odrzucony{% endif %}
+                    – <a href="{% url 'ogolne:wniosek_detail' wniosek.app_label wniosek.model_name wniosek.instance.pk %}">Szczegóły</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+{% else %}
+    <p>Nie masz jeszcze złożonych wniosków.</p>
+{% endif %}
+{% endblock %}

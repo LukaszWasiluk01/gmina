@@ -1,0 +1,18 @@
+{% extends 'ogolne/base.html' %}
+{% block content %}
+<h2>Lista wniosków o dotacje</h2>
+<ul>
+  {% for wniosek in wnioski %}
+    <li>
+      {{ wniosek.tytul }} – {{ wniosek.status }}
+      {% if user.groups.first.name == 'Komisja ds. dotacji' %}
+        [<a href="{% url 'dotacje:komisja' wniosek.pk %}">Komisja</a>]
+      {% elif user.groups.first.name == 'Wójt' %}
+        [<a href="{% url 'dotacje:wojt' wniosek.pk %}">Wójt</a>]
+      {% elif user.groups.first.name == 'Urzędnik ds. dotacji' %}
+        [<a href="{% url 'dotacje:przelej' wniosek.pk %}">Przelej</a>]
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endblock %}

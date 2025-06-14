@@ -1,0 +1,40 @@
+{% extends "ogolne/base.html" %}
+
+{% block content %}
+<h2>Witaj, {{ user.get_full_name|default:user.username }}</h2>
+
+{% if user.is_authenticated %}
+
+  <p>Jesteś zalogowany jako <strong>{{ user.username }}</strong>.</p>
+
+  <h3>Twoje akcje:</h3>
+  <ul>
+    {% if is_wnioskodawca %}
+      <li><a href="{% url 'ogolne:moje_wnioski' %}">Moje wnioski</a></li>
+      <li><a href="{% url 'akt_urodzenia:zglos_urodzenie'%}">Zgłoś urodzenie</a></li>
+      <li><a href="{% url 'dowody_osobiste:zloz' %}">Złóż wniosek o dowód osobisty</a></li>
+      <li><a href="{% url 'rejestracja_samochodu:zloz_wniosek' %}">Zarejestruj samochód</a></li>
+      <li><a href="{% url 'dotacje:zloz' %}">Złóż wniosek o dotację</a></li>
+      <li><a href="{% url 'budownictwo:zloz_wniosek_budowlany' %}">Złóż wniosek o pozwolenie na budowę</a></li>
+      <li><a href="{% url 'odpady:zloz' %}">Złóż deklarację śmieciową</a></li>
+      <li><a href="{% url 'ewidencja_zbiornikow:zadeklaruj_zbiornik' %}">Zadeklaruj zbiornik</a></li>
+      <li><a href="{% url 'ewidencja_zbiornikow:zadeklaruj_oproznienie' %}">Zadeklaruj opróżnienie zbiornika</a></li>
+    {% endif %}
+
+    {% if is_urzednik %}
+      <li><a href="{% url 'ogolne:panel_urzednika' %}">Panel urzędnika</a></li>
+    {% endif %}
+
+    {% if user.is_superuser %}
+      <li><a href="/admin/">Panel administracyjny</a></li>
+    {% endif %}
+  </ul>
+
+  <p><a href="{% url 'logout' %}">Wyloguj się</a></p>
+
+{% else %}
+  <p>Nie jesteś zalogowany.</p>
+  <p><a href="{% url 'login' %}">Zaloguj się</a> lub <a href="{% url 'register' %}">zarejestruj</a>.</p>
+{% endif %}
+
+{% endblock %}
