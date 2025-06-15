@@ -1,9 +1,0 @@
-{% extends 'ogolne/base.html' %}
-{% load crispy_forms_tags %}
-{% block content %}
-<h2>Rozpatrz wniosek o dowód</h2>
-<form method="post">{% csrf_token %}
-  {{ form|crispy }}
-  <button type="submit">Zapisz</button>
-</form>
-{% endblock %}

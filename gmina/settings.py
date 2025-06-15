@@ -120,6 +120,9 @@ LOGIN_URL = "ogolne:login"
 LOGIN_REDIRECT_URL = "ogolne:index"
 LOGOUT_REDIRECT_URL = "ogolne:index"
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 

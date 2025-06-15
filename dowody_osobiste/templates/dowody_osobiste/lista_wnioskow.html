@@ -6,7 +6,7 @@
     <li>
       {{ w.nazwisko }} – {{ w.status }}
       {% if user.groups.first.name == 'Urzędnik ds. wydawania dowodów osobistych' %}
-        [<a href="{% url 'dowody_osobiste:rozpatrz_wniosek_dowod' w.pk %}">Rozpatrz</a>]
+        [<a href="{% url 'dowody_osobiste:wniosek_detail' w.pk %}">Rozpatrz</a>]
       {% endif %}
     </li>
   {% endfor %}

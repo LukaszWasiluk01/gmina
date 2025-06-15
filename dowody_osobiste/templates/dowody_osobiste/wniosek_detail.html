@@ -1,0 +1,73 @@
+{% extends 'ogolne/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Szczegóły Wniosku o Dowód{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-{% if form %}7{% else %}12{% endif %}">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Szczegóły Wniosku o Dowód Osobisty nr {{ wniosek.id }}</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Wnioskodawca:</strong> {{ wniosek.wnioskodawca.get_full_name }}</p>
+                    <p><strong>Data złożenia:</strong> {{ wniosek.data_zlozenia|date:"Y-m-d H:i" }}</p>
+                    <p><strong>Status:</strong> {{ wniosek.get_status_display }}</span></p>
+                    <hr>
+                    <h5>Powód złożenia wniosku</h5>
+                    <p>
+                        {{ wniosek.get_powod_wydania_display }}
+                        {% if wniosek.powod_wydania == 'inny' and wniosek.inny_powod_wydania %}
+                            : <em>{{ wniosek.inny_powod_wydania }}</em>
+                        {% endif %}
+                    </p>
+                    <hr>
+                    <h5>Załączone zdjęcie</h5>
+                    {% if wniosek.zdjecie %}
+                        <a href="{{ wniosek.zdjecie.url }}" target="_blank">
+                            <img src="{{ wniosek.zdjecie.url }}" alt="Zdjęcie do dowodu" class="img-fluid rounded" style="max-height: 300px; border: 1px solid #ddd;">
+                        </a>
+                        <small class="form-text text-muted">Kliknij na zdjęcie, aby je powiększyć.</small>
+                    {% else %}
+                        <p class="text-danger">Brak załączonego zdjęcia.</p>
+                    {% endif %}
+
+                    {% if wniosek.uzasadnienie_odrzucenia %}
+                    <hr>
+                    <h5 class="text-danger">Uzasadnienie decyzji urzędnika</h5>
+                    <p class="text-danger border-left pl-3">{{ wniosek.uzasadnienie_odrzucenia|linebreaks }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if form and wniosek.status == 'Złożony' %}
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Panel Akcji</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="mt-3">
+                            <button type="submit" name="action" value="accept" class="btn btn-success">Zaakceptuj i przekaż do PWPW</button>
+                            <button type="submit" name="action" value="reject" class="btn btn-danger">Odrzuć</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if user.is_staff %}
+        <a href="{% url 'dowody_osobiste:lista_wnioskow_dowod' %}" class="btn btn-secondary mt-3">Powrót do listy</a>
+    {% else %}
+        <a href="{% url 'ogolne:moje_wnioski' %}" class="btn btn-secondary mt-3">Powrót do moich wniosków</a>
+    {% endif %}
+</div>
+{% endblock %}
