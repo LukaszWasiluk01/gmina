@@ -7,7 +7,7 @@ from ogolne.models import Wniosek
 class WniosekDotacja(Wniosek):
 
     STATUS_CHOICES = [
-        ("Złożony", "Złożony przez wnioskodawcę"),
+        ("Złożony", "Złożony"),
         ("Do oceny komisji", "Przekazany do oceny komisji"),
         ("Do decyzji wójta", "Oczekuje na decyzję wójta"),
         ("Zatwierdzony", "Zatwierdzony przez wójta"),

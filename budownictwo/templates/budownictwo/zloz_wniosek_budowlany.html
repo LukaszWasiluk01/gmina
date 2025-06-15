@@ -1,10 +1,10 @@
 {% extends 'ogolne/base.html' %}
-
+{% load crispy_forms_tags %}
 {% block content %}
 <h2>Złóż wniosek budowlany</h2>
 <form method="post">
   {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Dalej</button>
+  {{ form|crispy }}
+  <button class="btn btn-success btn-md" type="submit">Dalej</button>
 </form>
 {% endblock %}

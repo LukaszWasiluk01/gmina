@@ -29,8 +29,13 @@ class ListaZgloszenUrodzenView(LoginRequiredMixin, UserPassesTestMixin, ListView
     template_name = "akt_urodzenia/lista_urodzen.html"
     context_object_name = "zgloszenia"
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(status='Złożony')
+
     def test_func(self):
         return is_urzednik_rejestru_cywilnego(self.request.user)
+
 
 
 class ZgloszenieDetailView(LoginRequiredMixin, DetailView):

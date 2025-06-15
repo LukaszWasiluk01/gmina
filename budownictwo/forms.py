@@ -30,13 +30,10 @@ class WniosekBudowlanyForm(forms.ModelForm):
 class RozpatrzWniosekForm(forms.ModelForm):
     class Meta:
         model = WniosekBudowlany
-        fields = ["status", "uzasadnienie_odrzucenia"]
+        fields = ["uzasadnienie_odrzucenia"]
         widgets = {
-            "uzasadnienie_odrzucenia": forms.Textarea(attrs={"rows": 3}),
+            "uzasadnienie_odrzucenia": forms.Textarea(attrs={"rows": 4, "placeholder": "Wpisz uzasadnienie tylko w przypadku odrzucenia wniosku..."}),
         }
-
-
-class DecyzjaInspektoraForm(forms.ModelForm):
-    class Meta:
-        model = WniosekBudowlany
-        fields = ["status", "uzasadnienie_odrzucenia"]
+        labels = {
+            "uzasadnienie_odrzucenia": "Uzasadnienie decyzji (opcjonalne)"
+        }

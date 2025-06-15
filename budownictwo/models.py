@@ -16,10 +16,10 @@ class WniosekBudowlany(Wniosek):
     class Meta:
         verbose_name = "Wniosek budowlany"
         verbose_name_plural = "Wnioski budowlane"
+        ordering = ['-data_zlozenia']
 
     def __str__(self):
         return f"Wniosek budowlany nr {self.id} dla działki {self.numer_dzialki}"
 
     def get_absolute_url(self):
-
-        return reverse("budownictwo:rozpatrz_wniosek", kwargs={"pk": self.pk})
+        return reverse("budownictwo:wniosek_detail", kwargs={"pk": self.pk})

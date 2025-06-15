@@ -6,4 +6,5 @@
     <li>{{ d.podatnik.username }} – {{ d.tytul }} – {{ d.kwota }} zł</li>
   {% endfor %}
 </ul>
+<a href="{% url 'ogolne:panel_urzednika' %}">Wróć</a>
 {% endblock %}

@@ -1,10 +1,9 @@
 from django.urls import path
 
 from .views import (
-    DecyzjaInspektoraView,
     ListaWnioskowBudowlanychView,
     PotwierdzWniosekBudowlanyView,
-    RozpatrzWniosekBudowlanyView,
+    WniosekBudowlanyDetailView,
     ZlozWniosekBudowlanyView,
 )
 
@@ -22,12 +21,5 @@ urlpatterns = [
         ListaWnioskowBudowlanychView.as_view(),
         name="lista_wnioskow_budowlanych",
     ),
-    path(
-        "rozpatrz/<int:pk>/",
-        RozpatrzWniosekBudowlanyView.as_view(),
-        name="rozpatrz_wniosek",
-    ),
-    path(
-        "decyzja/<int:pk>/", DecyzjaInspektoraView.as_view(), name="decyzja_inspektora"
-    ),
+    path("wniosek/<int:pk>/", WniosekBudowlanyDetailView.as_view(), name="wniosek_detail"),
 ]

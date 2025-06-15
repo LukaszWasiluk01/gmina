@@ -12,5 +12,7 @@ class ZgloszenieUrodzeniaForm(forms.ModelForm):
 class RozpatrzZgloszenieForm(forms.ModelForm):
     class Meta:
         model = ZgloszenieUrodzenia
-
-        fields = ["status", "uzasadnienie_odrzucenia"]
+        fields = ["uzasadnienie_odrzucenia"]
+        labels = {
+            'uzasadnienie_odrzucenia': 'Uzasadnienie odrzucenia (jeśli dotyczy)',
+        }
