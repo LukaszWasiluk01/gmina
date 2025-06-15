@@ -1,0 +1,63 @@
+{% extends "ogolne/base.html" %}
+
+{% block title %}Szczegóły Decyzji Podatkowej{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h3>Szczegóły decyzji podatkowej nr {{ decyzja.id }}</h3>
+        <div>
+            {% if decyzja.oplacona %}
+                <span class="badge badge-success p-2">OPŁACONA</span>
+            {% elif decyzja.is_overdue %}
+                <span class="badge badge-danger p-2">PRZETERMINOWANA</span>
+            {% else %}
+                 <span class="badge badge-warning p-2">DO ZAPŁATY</span>
+            {% endif %}
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Dane decyzji</div>
+                <div class="card-body">
+                    <p><strong>Podatnik:</strong> {{ decyzja.podatnik.get_full_name }}</p>
+                    <p><strong>Rok podatkowy:</strong> {{ decyzja.rok_podatkowy }}</p>
+                    <p><strong>Data wystawienia:</strong> {{ decyzja.data_wystawienia|date:"Y-m-d" }}</p>
+                    <p><strong>Termin płatności:</strong> {{ decyzja.termin_platnosci|date:"Y-m-d" }}</p>
+                    <hr>
+                    {# ZMIANA: Dodano filtr `|floatformat:2` do wszystkich kwot #}
+                    <p><strong>Kwota do zapłaty:</strong> {{ decyzja.kwota|floatformat:2 }} PLN</p>
+                    <p><strong>Zapłacono:</strong> {{ suma_wplat|floatformat:2 }} PLN</p>
+                    <p><strong>Pozostało:</strong> <strong class="{% if pozostalo_do_zaplaty > 0 %}text-danger{% else %}text-success{% endif %}">{{ pozostalo_do_zaplaty|floatformat:2 }} PLN</strong></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Historia wpłat</div>
+                <div class="card-body">
+                    {% if user.is_staff and not decyzja.oplacona %}
+                    <a href="{% url 'podatki:rejestruj_wplate' decyzja.pk %}" class="btn btn-primary mb-3">Zarejestruj nową wpłatę</a>
+                    {% endif %}
+
+                    {% if decyzja.wplaty.all %}
+                        <ul class="list-group">
+                        {% for wplata in decyzja.wplaty.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Wpłata z dnia {{ wplata.data_wplaty|date:"Y-m-d H:i" }}
+                                <span class="badge badge-success badge-pill">{{ wplata.kwota_wplaty|floatformat:2 }} PLN</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Brak zarejestrowanych wpłat.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'podatki:lista_decyzji' %}" class="btn btn-secondary mt-4">Powrót do listy</a>
+</div>
+{% endblock %}

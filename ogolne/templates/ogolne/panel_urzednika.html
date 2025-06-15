@@ -1,5 +1,8 @@
 {% extends "ogolne/base.html" %}
 
+{# ZMIANA 1: Ładujemy nasz nowy zestaw filtrów #}
+{% load auth_extras %}
+
 {% block title %}Panel Urzędnika{% endblock %}
 
 {% block content %}
@@ -8,91 +11,120 @@
     <p>Witaj, {{ user.username }}. Wybierz moduł, którym chcesz zarządzać.</p>
 
     <div class="row">
-        {% if perms.akt_urodzenia.view_zgloszenieurodzenia %}
+
+        {# ZMIANA 2: Używamy nowego, prostego filtra zamiast skomplikowanego wywołania #}
+
+        {# --- Akty Stanu Cywilnego --- #}
+        {% if user|has_group:"Urzędnik ds. rejestru stanu cywilnego" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Akty Urodzenia</h5>
-                    <p class="card-text">Zarządzaj zgłoszeniami urodzeń.</p>
-                    <a href="{% url 'akt_urodzenia:lista_zgloszen' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <p class="card-text flex-grow-1">Zarządzaj zgłoszeniami urodzeń.</p>
+                    <a href="{% url 'akt_urodzenia:lista_zgloszen' %}" class="btn btn-primary mt-auto">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if perms.budownictwo.view_wniosekbudowlany %}
+        {# --- Budownictwo --- #}
+        {% if user|has_group:"Urzędnik ds. budownictwa" or user|has_group:"Inspektor nadzoru budowlanego" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Budownictwo</h5>
-                    <p class="card-text">Zarządzaj wnioskami o pozwolenie na budowę.</p>
-                    {% if 'Urzędnik ds. budownictwa' in user.groups.all|join:", " %}
-                        <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary">Weryfikuj wnioski</a>
-                    {% endif %}
-                    {% if 'Inspektor nadzoru budowlanego' in user.groups.all|join:", " %}
-                        <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary">Wydaj decyzje</a>
-                    {% endif %}
+                    <p class="card-text flex-grow-1">Zarządzaj wnioskami o pozwolenie na budowę.</p>
+                    <div class="mt-auto">
+                        {% if user|has_group:'Urzędnik ds. budownictwa' %}
+                            <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary d-block mb-2">Weryfikuj wnioski</a>
+                        {% endif %}
+                        {% if user|has_group:'Inspektor nadzoru budowlanego' %}
+                            <a href="{% url 'budownictwo:lista_wnioskow_budowlanych' %}" class="btn btn-primary d-block">Wydaj decyzje</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if perms.dotacje.view_wniosekdotacja %}
+        {# --- Dotacje --- #}
+        {% if user|has_group:"Urzędnik ds. dotacji" or user|has_group:"Komisja ds. dotacji" or user|has_group:"Wójt" or user|has_group:"Skarbnik gminy" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Dotacje</h5>
-                    <p class="card-text">Zarządzaj procesem przyznawania dotacji.</p>
-                    {% if 'Komisja ds. dotacji' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Weryfikacja Komisji</a>
-                    {% endif %}
-                    {% if 'Wójt' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Rekomendacje dla Wójta</a>
-                    {% endif %}
-                     {% if 'Urzędnik ds. dotacji' in user.groups.all|join:", " %}
-                        <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary">Realizacja dotacji</a>
-                    {% endif %}
+                    <p class="card-text flex-grow-1">Zarządzaj procesem przyznawania dotacji.</p>
+                     <div class="mt-auto">
+                        {% if user|has_group:'Urzędnik ds. dotacji' %}
+                            <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary d-block mb-2">Weryfikacja formalna</a>
+                        {% endif %}
+                         {% if user|has_group:'Komisja ds. dotacji' %}
+                            <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary d-block mb-2">Ocena Komisji</a>
+                        {% endif %}
+                        {% if user|has_group:'Wójt' %}
+                            <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary d-block mb-2">Decyzje Wójta</a>
+                        {% endif %}
+                        {% if user|has_group:'Skarbnik gminy' %}
+                            <a href="{% url 'dotacje:lista_wnioskow' %}" class="btn btn-primary d-block">Realizacja wypłat</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if perms.dowody_osobiste.view_wniosekdowod %}
+        {# --- Dowody Osobiste --- #}
+        {% if user|has_group:"Urzędnik ds. wydawania dowodów osobistych" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Dowody Osobiste</h5>
-                    <p class="card-text">Zarządzaj wnioskami o dowód osobisty.</p>
-                    <a href="{% url 'dowody_osobiste:lista_wnioskow_dowod' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <p class="card-text flex-grow-1">Zarządzaj wnioskami o dowód osobisty.</p>
+                    <a href="{% url 'dowody_osobiste:lista_wnioskow_dowod' %}" class="btn btn-primary mt-auto">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if perms.rejestracja_samochodu.view_wniosekrejestracja %}
+        {# --- Rejestracja Samochodów --- #}
+        {% if user|has_group:"Urzędnik ds. rejestracji samochodów" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Rejestracja Samochodów</h5>
-                    <p class="card-text">Zarządzaj wnioskami o rejestrację pojazdów.</p>
-                    <a href="{% url 'rejestracja_samochodu:lista_wnioskow_rejestracja' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <p class="card-text flex-grow-1">Zarządzaj wnioskami o rejestrację pojazdów.</p>
+                    <a href="{% url 'rejestracja_samochodu:lista_wnioskow_rejestracja' %}" class="btn btn-primary mt-auto">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        {% if perms.odpady.view_deklaracjasmieciowa %}
+        {# --- Gospodarka Odpadami --- #}
+        {% if user|has_group:"Urzędnik ds. gospodarki odpadami" %}
         <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
                     <h5 class="card-title">Gospodarka Odpadami</h5>
-                    <p class="card-text">Zarządzaj deklaracjami śmieciowymi.</p>
-                    <a href="{% url 'odpady:lista_deklaracji' %}" class="btn btn-primary">Przejdź do modułu</a>
+                    <p class="card-text flex-grow-1">Zarządzaj deklaracjami śmieciowymi.</p>
+                    <a href="{% url 'odpady:lista_deklaracji' %}" class="btn btn-primary mt-auto">Przejdź do modułu</a>
                 </div>
             </div>
         </div>
         {% endif %}
 
+        {# --- Podatki (MODUŁ DODANY) --- #}
+        {% if user|has_group:"Urzędnik ds. podatków" %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Podatki</h5>
+                    <p class="card-text flex-grow-1">Zarządzaj decyzjami i wpłatami podatkowymi.</p>
+                    <a href="{% url 'podatki:lista_decyzji' %}" class="btn btn-primary mt-auto">Przejdź do modułu</a>
+                </div>
+            </div>
         </div>
+        {% endif %}
+        
+    </div>
 </div>
 {% endblock %}

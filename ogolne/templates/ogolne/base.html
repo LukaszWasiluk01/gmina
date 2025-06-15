@@ -25,6 +25,10 @@
                             <a class="nav-link" href="{% url 'ogolne:moje_wnioski' %}">Moje Wnioski</a>
                         </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'podatki:lista_decyzji' %}">Moje Podatki</a>
+                        </li>
+
                         {% if user.is_staff or user.is_superuser or user.groups.all|length > 1 or 'Wnioskodawca' not in user.groups.all|join:", " %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ogolne:panel_urzednika' %}">Panel Urzędnika</a>

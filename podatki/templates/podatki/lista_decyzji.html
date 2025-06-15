@@ -1,10 +1,46 @@
 {% extends 'ogolne/base.html' %}
+
+{% block title %}Decyzje Podatkowe{% endblock %}
+
 {% block content %}
-<h2>Lista decyzji podatkowych</h2>
-<ul>
-  {% for d in decyzje %}
-    <li>{{ d.podatnik.username }} – {{ d.tytul }} – {{ d.kwota }} zł</li>
-  {% endfor %}
-</ul>
-<a href="{% url 'ogolne:panel_urzednika' %}">Wróć</a>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Decyzje Podatkowe</h3>
+        {% if user.is_staff %}
+            <a href="{% url 'podatki:nowa_decyzja' %}" class="btn btn-primary">Wystaw nową decyzję</a>
+        {% endif %}
+    </div>
+
+    {% if decyzje %}
+        <div class="list-group">
+            {% for decyzja in decyzje %}
+                <a href="{{ decyzja.get_absolute_url }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">
+                            Decyzja za rok {{ decyzja.rok_podatkowy }}
+                            {% if user.is_staff %}
+                                <small class="text-muted">- dla {{ decyzja.podatnik.get_full_name }}</small>
+                            {% endif %}
+                        </h5>
+                        <small>Termin płatności: {{ decyzja.termin_platnosci|date:"Y-m-d" }}</small>
+                    </div>
+                    <p class="mb-1">Kwota do zapłaty: {{ decyzja.kwota }} PLN</p>
+                    <div>
+                        {% if decyzja.oplacona %}
+                            <span class="badge badge-success">Opłacona</span>
+                        {% elif decyzja.is_overdue %}
+                            <span class="badge badge-danger">Przeterminowana</span>
+                        {% else %}
+                            <span class="badge badge-warning">Oczekuje na wpłatę</span>
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Brak decyzji podatkowych do wyświetlenia.
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
