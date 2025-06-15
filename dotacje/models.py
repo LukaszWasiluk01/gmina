@@ -1,8 +1,8 @@
 from django.db import models
 from django.urls import reverse
+from django.core.validators import RegexValidator
 
 from ogolne.models import Wniosek
-
 
 class WniosekDotacja(Wniosek):
 
@@ -14,7 +14,6 @@ class WniosekDotacja(Wniosek):
         ("Do realizacji (Skarbnik)", "Oczekuje na przelew skarbnika"),
         ("Zrealizowany", "Dotacja wypłacona"),
         ("Odrzucony", "Odrzucony"),
-        ("Braki formalne", "Wezwanie do uzupełnienia braków"),
     ]
 
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Złożony")
@@ -26,12 +25,19 @@ class WniosekDotacja(Wniosek):
         max_digits=10, decimal_places=2, null=True, blank=True
     )
 
+    numer_konta_bankowego = models.CharField(
+        max_length=26,
+        validators=[RegexValidator(r'^\d{26}$', 'Numer konta musi składać się z 26 cyfr.')],
+        help_text="Proszę podać 26-cyfrowy numer konta bankowego (bez spacji i myślników)."
+    )
+
     class Meta:
         verbose_name = "Wniosek o dotację"
         verbose_name_plural = "Wnioski o dotacje"
+        ordering = ['-data_zlozenia']
 
     def __str__(self):
         return f'Wniosek o dotację: "{self.tytul_projektu}"'
 
     def get_absolute_url(self):
-        return reverse("dotacje:rozpatrz_wniosek", kwargs={"pk": self.pk})
+        return reverse("dotacje:wniosek_detail", kwargs={"pk": self.pk})

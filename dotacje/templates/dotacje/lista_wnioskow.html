@@ -16,7 +16,7 @@
             <td>{{ wniosek.tytul_projektu }}</td>
             <td><span class="badge bg-info">{{ wniosek.get_status_display }}</span></td>
             <td>
-                <a href="{% url 'dotacje:rozpatrz_wniosek' wniosek.pk %}" class="btn btn-primary btn-sm">
+                <a href="{% url 'dotacje:wniosek_detail' wniosek.pk %}" class="btn btn-primary btn-sm">
                     Rozpatrz
                 </a>
             </td>

@@ -1,69 +1,39 @@
 from django import forms
-
 from .models import WniosekDotacja
 
-
 class WniosekDotacjaForm(forms.ModelForm):
+    """
+    Formularz dla użytkownika do składania wniosku.
+    ZMIANA: Dodano pole `numer_konta_bankowego`.
+    """
     class Meta:
         model = WniosekDotacja
-        fields = ["tytul_projektu", "opis_projektu", "wnioskowana_kwota"]
-
-
-class WeryfikacjaFormalnaForm(forms.ModelForm):
-
-    class Meta:
-        model = WniosekDotacja
-        fields = ["status"]
-        widgets = {
-            "status": forms.Select(
-                choices=[
-                    ("Do oceny komisji", "Poprawny formalnie (przekaż do komisji)"),
-                    ("Braki formalne", "Wezwij do uzupełnienia braków"),
-                    ("Odrzucony", "Odrzuć (błędy nieusuwalne)"),
-                ]
-            )
+        fields = ["tytul_projektu", "opis_projektu", "wnioskowana_kwota", "numer_konta_bankowego"]
+        labels = {
+            "numer_konta_bankowego": "Numer konta bankowego do wypłaty dotacji"
         }
 
-
-class OcenaKomisjiForm(forms.ModelForm):
-
+class RozpatrzWniosekDotacjaForm(forms.ModelForm):
+    """
+    JEDEN, UNIWERSALNY FORMULARZ DLA WSZYSTKICH URZĘDNIKÓW.
+    Służy do wpisania uzasadnienia lub kwoty przyznanej przez wójta.
+    """
     class Meta:
         model = WniosekDotacja
-        fields = ["status"]
+        fields = ["kwota_przyznana", "uzasadnienie_odrzucenia"]
         widgets = {
-            "status": forms.Select(
-                choices=[
-                    ("Do decyzji wójta", "Rekomendacja pozytywna (przekaż do wójta)"),
-                    ("Odrzucony", "Rekomendacja negatywna (odrzuć)"),
-                ]
-            )
+            "uzasadnienie_odrzucenia": forms.Textarea(attrs={"rows": 4, "placeholder": "Wpisz uzasadnienie, jeśli odrzucasz wniosek lub chcesz dodać komentarz..."}),
+        }
+        labels = {
+            "kwota_przyznana": "Kwota przyznanej dotacji (PLN)",
+            "uzasadnienie_odrzucenia": "Uzasadnienie / Komentarz (opcjonalne)"
         }
 
+    def __init__(self, *args, **kwargs):
 
-class DecyzjaWojtaForm(forms.ModelForm):
+        user = kwargs.pop('user', None)
+        status = kwargs.pop('status', None)
+        super().__init__(*args, **kwargs)
 
-    class Meta:
-        model = WniosekDotacja
-        fields = ["status", "kwota_przyznana"]
-        widgets = {
-            "status": forms.Select(
-                choices=[
-                    ("Zatwierdzony", "Zatwierdź dotację"),
-                    ("Odrzucony", "Odrzuć dotację"),
-                ]
-            )
-        }
-
-
-class RealizacjaSkarbnikaForm(forms.ModelForm):
-
-    class Meta:
-        model = WniosekDotacja
-        fields = ["status"]
-        widgets = {
-            "status": forms.Select(
-                choices=[
-                    ("Zrealizowany", "Potwierdź wypłatę dotacji"),
-                ]
-            )
-        }
+        if not (user and user.groups.filter(name="Wójt").exists() and status == "Do decyzji wójta"):
+            self.fields.pop('kwota_przyznana')

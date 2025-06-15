@@ -30,5 +30,9 @@ class Wplata(models.Model):
     kwota_wplaty = models.DecimalField(max_digits=10, decimal_places=2)
     urzednik = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
+    class Meta:
+        verbose_name = "Wpłata"
+        verbose_name_plural = "Wpłaty"
+
     def __str__(self):
         return f"Wpłata {self.kwota_wplaty} zł do decyzji {self.decyzja.id}"
